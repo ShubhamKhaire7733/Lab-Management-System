@@ -1,8 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import LoginForm from './components/auth/LoginForm';
-import RegisterForm from './components/auth/RegisterForm';
 import { getCurrentUser } from './lib/auth';
+
+// Pages
+import Home from './pages/Home';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import StudentDashboard from './pages/dashboard/StudentDashboard';
+import TeacherDashboard from './pages/dashboard/TeacherDashboard';
+import AdminDashboard from './pages/dashboard/AdminDashboard';
 
 function PrivateRoute({ children, allowedRoles }) {
   const user = getCurrentUser();
@@ -23,29 +29,24 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto">
           <Routes>
-            <Route path="/" element={
-              <div className="text-center">
-                <h1 className="text-4xl font-bold mb-4">Welcome to Lab Management</h1>
-                <p className="text-gray-600">Please login or register to continue</p>
-              </div>
-            } />
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/register" element={<RegisterForm />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
             <Route path="/student" element={
               <PrivateRoute allowedRoles={['student']}>
-                <div>Student Dashboard</div>
+                <StudentDashboard />
               </PrivateRoute>
             } />
             <Route path="/teacher" element={
               <PrivateRoute allowedRoles={['teacher']}>
-                <div>Teacher Dashboard</div>
+                <TeacherDashboard />
               </PrivateRoute>
             } />
             <Route path="/admin" element={
               <PrivateRoute allowedRoles={['admin']}>
-                <div>Admin Dashboard</div>
+                <AdminDashboard />
               </PrivateRoute>
             } />
           </Routes>

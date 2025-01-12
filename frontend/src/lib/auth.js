@@ -23,3 +23,9 @@ export const getCurrentUser = () => {
     return null;
   }
 };
+
+export const logout = () => {
+  removeToken();
+  // Clear any other user-related data from localStorage if needed
+  localStorage.clear();
+};
