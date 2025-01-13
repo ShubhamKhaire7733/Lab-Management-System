@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GraduationCap, Users, ClipboardList, Calendar, ArrowLeft, UserCircle } from 'lucide-react';
+import StudentAssessmentDialog from '../../components/dialog/StudentAssessmentDialog';
 
 function BatchDetails() {
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const { batchId } = useParams();
   const navigate = useNavigate();
 
@@ -25,9 +28,8 @@ function BatchDetails() {
     ]
   };
 
-  const handleStudentClick = (rollNo) => {
-    // Will navigate to student details page in future
-    console.log(`Clicked student: ${rollNo}`);
+  const handleStudentClick = (student) => {
+    setSelectedStudent(student);
   };
 
   return (
@@ -112,7 +114,7 @@ function BatchDetails() {
           {batchInfo.students.map((student) => (
             <button
               key={student.rollNo}
-              onClick={() => handleStudentClick(student.rollNo)}
+              onClick={() => handleStudentClick(student)}
               className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 group"
             >
               <div className="border-b border-gray-100 p-4">
@@ -131,6 +133,13 @@ function BatchDetails() {
           ))}
         </div>
       </div>
+
+      {/* Student Assessment Dialog */}
+      <StudentAssessmentDialog
+        isOpen={selectedStudent !== null}
+        onClose={() => setSelectedStudent(null)}
+        student={selectedStudent}
+      />
     </div>
   );
 }
