@@ -10,6 +10,7 @@ import StudentDashboard from './pages/dashboard/StudentDashboard';
 import TeacherDashboard from './pages/dashboard/TeacherDashboard';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import BatchDetails from './pages/dashboard/BatchDetails';
+import BatchAttendance from './pages/dashboard/BatchAttendance';
 
 function PrivateRoute({ children, allowedRoles }) {
   const user = getCurrentUser();
@@ -48,6 +49,11 @@ function App() {
             <Route path="/teacher/batch/:batchId" element={
               <PrivateRoute allowedRoles={['teacher']}>
                 <BatchDetails />
+              </PrivateRoute>
+            } />
+            <Route path="/teacher/batch/:batchId/attendance" element={
+              <PrivateRoute allowedRoles={['teacher']}>
+                <BatchAttendance />
               </PrivateRoute>
             } />
             <Route path="/admin" element={

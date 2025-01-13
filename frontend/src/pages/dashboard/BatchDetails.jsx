@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { GraduationCap, Users, ClipboardList, Calendar, ArrowLeft, UserCircle } from 'lucide-react';
+import { GraduationCap, Users, ClipboardList, Calendar, ArrowLeft, UserCircle, ClipboardCheck } from 'lucide-react';
 import StudentAssessmentDialog from '../../components/dialog/StudentAssessmentDialog';
 
 function BatchDetails() {
@@ -19,10 +19,10 @@ function BatchDetails() {
     semester: 'II',
     schedule: 'Monday, Wednesday (10:30 AM - 12:30 PM)',
     students: [
-      { rollNo: '33101', name: 'Aarush Kumavat', attendance: 85 },
+      { rollNo: '33101', name: 'Kartik S Tichkule', attendance: 85 },
       { rollNo: '33102', name: 'Adwait Borate', attendance: 90 },
-      { rollNo: '33103', name: 'Aditya Patil', attendance: 88 },
-      { rollNo: '33104', name: 'Akshay Kumar', attendance: 92 },
+      { rollNo: '33103', name: 'Tanmay Khot', attendance: 88 },
+      { rollNo: '33104', name: 'Krish Vora', attendance: 92 },
       { rollNo: '33105', name: 'Anjali Sharma', attendance: 95 },
       { rollNo: '33106', name: 'Arjun Deshmukh', attendance: 87 },
     ]
@@ -105,6 +105,16 @@ function BatchDetails() {
                   <p className="font-medium text-gray-900">{batchInfo.labCoordinator}</p>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-6">
+              <button
+                onClick={() => navigate(`/teacher/batch/${batchId}/attendance`)}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#155E95] hover:bg-[#0f4a75] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#155E95]"
+              >
+                <ClipboardCheck className="w-5 h-5 mr-2" />
+                Lab Attendance
+              </button>
             </div>
           </div>
         </div>

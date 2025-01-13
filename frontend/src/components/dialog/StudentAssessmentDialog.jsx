@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 
 function StudentAssessmentDialog({ isOpen, onClose, student }) {
-  if (!isOpen) return null;
+  if (!isOpen || !student) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -33,36 +33,12 @@ function StudentAssessmentDialog({ isOpen, onClose, student }) {
             {/* Student Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-500">Teacher Name:</label>
-                <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#155E95] focus:ring-[#155E95] sm:text-sm"
-                  placeholder="Enter teacher name"
-                />
+                <label className="block text-sm font-medium text-gray-500">Student Name:</label>
+                <p className="mt-1 text-lg font-medium text-gray-900">{student.name}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-500">Lab Coordinator:</label>
-                <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#155E95] focus:ring-[#155E95] sm:text-sm"
-                  placeholder="Enter lab coordinator name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500">Batch:</label>
-                <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#155E95] focus:ring-[#155E95] sm:text-sm"
-                  placeholder="Enter batch"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500">Subject:</label>
-                <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#155E95] focus:ring-[#155E95] sm:text-sm"
-                  placeholder="Enter subject"
-                />
+                <label className="block text-sm font-medium text-gray-500">Roll Number:</label>
+                <p className="mt-1 text-lg font-medium text-gray-900">{student.rollNo}</p>
               </div>
             </div>
 
@@ -77,9 +53,6 @@ function StudentAssessmentDialog({ isOpen, onClose, student }) {
                     <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RPP Marks (Out of 5)</th>
                     <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SPO Marks (Out of 5)</th>
                     <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignment Marks (Out of 10)</th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sign of Faculty</th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sign of Student</th>
-                    <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
                   </tr>
                   <tr className="bg-gray-50">
                     <th></th>
@@ -87,7 +60,7 @@ function StudentAssessmentDialog({ isOpen, onClose, student }) {
                     <th className="px-3 py-2 text-xs font-medium text-gray-500">Actual</th>
                     <th className="px-3 py-2 text-xs font-medium text-gray-500">Scheduled</th>
                     <th className="px-3 py-2 text-xs font-medium text-gray-500">Actual</th>
-                    <th colSpan={6}></th>
+                    <th colSpan={3}></th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -114,15 +87,6 @@ function StudentAssessmentDialog({ isOpen, onClose, student }) {
                       </td>
                       <td className="px-3 py-3">
                         <input type="number" max="10" className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#155E95] focus:ring-[#155E95] sm:text-sm" />
-                      </td>
-                      <td className="px-3 py-3">
-                        <div className="h-8 w-20 border border-gray-300 rounded-md"></div>
-                      </td>
-                      <td className="px-3 py-3">
-                        <div className="h-8 w-20 border border-gray-300 rounded-md"></div>
-                      </td>
-                      <td className="px-3 py-3">
-                        <input type="text" className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#155E95] focus:ring-[#155E95] sm:text-sm" />
                       </td>
                     </tr>
                   ))}
