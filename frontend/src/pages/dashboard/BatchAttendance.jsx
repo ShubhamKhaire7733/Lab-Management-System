@@ -1,26 +1,86 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 function BatchAttendance({ defaultAttendance = true }) {
   const { batchId } = useParams();
   const navigate = useNavigate();
 
   const [students, setStudents] = useState([
-    { rollNo: '33101', name: 'Kartik S Tichkule', attendance: Array(16).fill(defaultAttendance) },
-    { rollNo: '33102', name: 'Ayush B Kharwar', attendance: Array(16).fill(defaultAttendance) },
+    {
+      rollNo: "33101",
+      name: "Kartik S Tichkule",
+      attendance: Array(16).fill(defaultAttendance),
+    },
+    {
+      rollNo: "33102",
+      name: "Ayush B Kharwar",
+      attendance: Array(16).fill(defaultAttendance),
+    },
     // Add more students...
+    {
+      rollNo: "33103",
+      name: "Rohan M Deshmukh",
+      attendance: Array(16).fill(defaultAttendance),
+    },
+    {
+      rollNo: "33104",
+      name: "Sneha P Patil",
+      attendance: Array(16).fill(defaultAttendance),
+    },
+    {
+      rollNo: "33105",
+      name: "Anjali R Kulkarni",
+      attendance: Array(16).fill(defaultAttendance),
+    },
+    {
+      rollNo: "33106",
+      name: "Vikas S Jadhav",
+      attendance: Array(16).fill(defaultAttendance),
+    },
+    {
+      rollNo: "33107",
+      name: "Priya A Sharma",
+      attendance: Array(16).fill(defaultAttendance),
+    },
+    {
+      rollNo: "33108",
+      name: "Rahul K Mehta",
+      attendance: Array(16).fill(defaultAttendance),
+    },
+    {
+      rollNo: "33109",
+      name: "Neha S Gupta",
+      attendance: Array(16).fill(defaultAttendance),
+    },
+    {
+      rollNo: "33110",
+      name: "Amit P Singh",
+      attendance: Array(16).fill(defaultAttendance),
+    },
+    {
+      rollNo: "33111",
+      name: "Pooja R Verma",
+      attendance: Array(16).fill(defaultAttendance),
+    },
+    {
+      rollNo: "33112",
+      name: "Suresh N Patil",
+      attendance: Array(16).fill(defaultAttendance),
+    },
   ]);
 
   const [practicalDates, setPracticalDates] = useState(
-    Array(16).fill({ date: '', startTime: '', endTime: '' })
+    Array(16).fill({ date: "", startTime: "", endTime: "" })
   );
 
   // Generate a list of all valid times (15-minute intervals between 9:00 and 16:00)
   const allTimes = [];
   for (let hour = 9; hour <= 16; hour++) {
     for (let minute = 0; minute < 60; minute += 15) {
-      const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+      const timeString = `${String(hour).padStart(2, "0")}:${String(
+        minute
+      ).padStart(2, "0")}`;
       if (hour === 16 && minute > 0) break; // Stop at 4:00
       allTimes.push(timeString);
     }
@@ -37,7 +97,7 @@ function BatchAttendance({ defaultAttendance = true }) {
   const toggleAttendance = (studentIndex, dateIndex) => {
     const { date, startTime, endTime } = practicalDates[dateIndex];
     if (!date || !startTime || !endTime) {
-      alert('Please enter date, start time, and end time first');
+      alert("Please enter date, start time, and end time first");
       return;
     }
 
@@ -45,7 +105,8 @@ function BatchAttendance({ defaultAttendance = true }) {
       const newStudents = [...prevStudents];
       const student = { ...newStudents[studentIndex] };
       const attendance = [...student.attendance];
-      attendance[dateIndex] = attendance[dateIndex] === null ? true : !attendance[dateIndex];
+      attendance[dateIndex] =
+        attendance[dateIndex] === null ? true : !attendance[dateIndex];
       student.attendance = attendance;
       newStudents[studentIndex] = student;
       return newStudents;
@@ -79,13 +140,13 @@ function BatchAttendance({ defaultAttendance = true }) {
                 <tr className="bg-gray-50">
                   <th
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border sticky left-0 bg-gray-50 z-20"
-                    style={{ width: '80px' }}
+                    style={{ width: "80px" }}
                   >
                     Roll No
                   </th>
                   <th
                     className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border sticky left-[80px] bg-gray-50 z-20"
-                    style={{ width: '200px' }}
+                    style={{ width: "200px" }}
                   >
                     Name of the Student
                   </th>
@@ -95,12 +156,20 @@ function BatchAttendance({ defaultAttendance = true }) {
                         <input
                           type="date"
                           value={practicalDates[index].date}
-                          onChange={(e) => handleDateTimeChange(index, 'date', e.target.value)}
+                          onChange={(e) =>
+                            handleDateTimeChange(index, "date", e.target.value)
+                          }
                           className="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-[#155E95] focus:ring-[#155E95] mb-1"
                         />
                         <select
                           value={practicalDates[index].startTime}
-                          onChange={(e) => handleDateTimeChange(index, 'startTime', e.target.value)}
+                          onChange={(e) =>
+                            handleDateTimeChange(
+                              index,
+                              "startTime",
+                              e.target.value
+                            )
+                          }
                           className="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-[#155E95] focus:ring-[#155E95] mb-1"
                         >
                           <option value="">Start Time</option>
@@ -112,7 +181,13 @@ function BatchAttendance({ defaultAttendance = true }) {
                         </select>
                         <select
                           value={practicalDates[index].endTime}
-                          onChange={(e) => handleDateTimeChange(index, 'endTime', e.target.value)}
+                          onChange={(e) =>
+                            handleDateTimeChange(
+                              index,
+                              "endTime",
+                              e.target.value
+                            )
+                          }
                           className="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-[#155E95] focus:ring-[#155E95]"
                         >
                           <option value="">End Time</option>
@@ -138,13 +213,13 @@ function BatchAttendance({ defaultAttendance = true }) {
                   <tr key={student.rollNo}>
                     <td
                       className="px-4 py-3 text-sm text-gray-900 border sticky left-0 bg-white z-10"
-                      style={{ width: '80px' }}
+                      style={{ width: "80px" }}
                     >
                       {student.rollNo}
                     </td>
                     <td
                       className="px-4 py-3 text-sm text-gray-900 border sticky left-[80px] bg-white z-10"
-                      style={{ width: '200px' }}
+                      style={{ width: "200px" }}
                     >
                       {student.name}
                     </td>
@@ -155,12 +230,16 @@ function BatchAttendance({ defaultAttendance = true }) {
                           practicalDates[dateIndex].startTime &&
                           practicalDates[dateIndex].endTime ? (
                             <button
-                              onClick={() => toggleAttendance(studentIndex, dateIndex)}
+                              onClick={() =>
+                                toggleAttendance(studentIndex, dateIndex)
+                              }
                               className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${
-                                isPresent ? 'bg-[#155E95] text-white' : 'bg-red-500 text-white'
+                                isPresent
+                                  ? "bg-[#155E95] text-white"
+                                  : "bg-red-500 text-white"
                               }`}
                             >
-                              {isPresent ? 'P' : 'A'}
+                              {isPresent ? "P" : "A"}
                             </button>
                           ) : (
                             <div className="w-10 h-10 flex items-center justify-center text-gray-400">

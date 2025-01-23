@@ -7,11 +7,11 @@ function TeacherDashboard() {
   const user = getCurrentUser();
 
   const teacherDetails = {
-    name: "Dr. Sarah Johnson",
-    email: "sarah.johnson@pict.edu",
+    name: "Sumitra Jakhete",
+    email: "ssumitra@pict.edu",
     phone: "+91 98765 43210",
-    department: "Computer Engineering",
-    subjects: ["Data Structures", "Algorithms", "Database Management"]
+    department: "Information Technology",
+    subjects: ["Database Management"]
   };
 
   const academicYears = [
