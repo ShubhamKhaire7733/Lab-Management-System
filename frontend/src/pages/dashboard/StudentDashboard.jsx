@@ -78,20 +78,20 @@ function StudentDashboard() {
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold text-[#155E95] mb-4">Final Assessment</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
             <p className="text-sm text-gray-600 mb-2">Proportionate Assignment marks out of 60(A)</p>
             <p className="text-2xl font-bold text-[#155E95]">45</p>
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
             <p className="text-sm text-gray-600 mb-2">Test marks out of 20(B)</p>
             <p className="text-2xl font-bold text-[#155E95]">15</p>
           </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
             <p className="text-sm text-gray-600 mb-2">Theory Attendance marks out of 20(C)</p>
             <p className="text-2xl font-bold text-[#155E95]">18</p>
           </div>
         </div>
-        <div className="mt-6 p-4 bg-[#155E95] bg-opacity-5 rounded-lg">
+        <div className="mt-6 p-4 bg-[#155E95] bg-opacity-5 rounded-lg shadow-md  hover:shadow-xl transition-shadow duration-300">
           <p className="text-lg font-semibold text-[#155E95]">
             Final TW marks (Converted to) out of 25 or 50: <span className="text-2xl">42</span>
           </p>

@@ -2,7 +2,7 @@ function ProgressCard({ title, value, total, icon: Icon }) {
   const percentage = (value / total) * 100;
   
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
           <div className="p-2 bg-[#155E95] bg-opacity-10 rounded-lg">
@@ -27,7 +27,7 @@ function ProgressCard({ title, value, total, icon: Icon }) {
         <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-[#155E95] bg-opacity-10">
           <div
             style={{ width: `${percentage}%` }}
-            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-[#155E95]"
+            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-[#155E95] to-[#1E90FF] rounded transition-all duration-500"
           ></div>
         </div>
       </div>
