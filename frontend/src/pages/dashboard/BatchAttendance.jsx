@@ -9,28 +9,28 @@ function BatchAttendance({ defaultAttendance = true }) {
   const [students, setStudents] = useState([
     {
       rollNo: "33101",
-      name: "Kartik S Tichkule",
+      name: "Sandesh Nakkawar",
       attendance: Array(16).fill(defaultAttendance),
     },
     {
       rollNo: "33102",
-      name: "Ayush B Kharwar",
+      name: "Adwait Borate",
       attendance: Array(16).fill(defaultAttendance),
     },
     // Add more students...
     {
       rollNo: "33103",
-      name: "Rohan M Deshmukh",
+      name: "Shubham Khaire",
       attendance: Array(16).fill(defaultAttendance),
     },
     {
       rollNo: "33104",
-      name: "Sneha P Patil",
+      name: "Sairaj Bodhale",
       attendance: Array(16).fill(defaultAttendance),
     },
     {
       rollNo: "33105",
-      name: "Anjali R Kulkarni",
+      name: "Shreyash Ingle",
       attendance: Array(16).fill(defaultAttendance),
     },
     {

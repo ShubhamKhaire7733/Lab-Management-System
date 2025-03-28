@@ -13,18 +13,18 @@ function BatchDetails() {
     id: batchId,
     name: 'Batch A1',
     subject: 'Data Structures Laboratory',
-    teacherName: 'Sumitra Jakhete',
+    teacherName: 'Jyoti Jadhav',
     labCoordinator: 'Sheetal Patil',
     academicYear: '2023-2024',
     semester: 'II',
     schedule: 'Monday, Wednesday (10:30 AM - 12:30 PM)',
     students: [
-      { rollNo: '33101', name: 'Kartik S Tichkule', attendance: 85 },
+      { rollNo: '33101', name: 'Sandesh Nakkawar', attendance: 85 },
       { rollNo: '33102', name: 'Adwait Borate', attendance: 90 },
-      { rollNo: '33103', name: 'Tanmay Khot', attendance: 88 },
-      { rollNo: '33104', name: 'Krish Vora', attendance: 92 },
-      { rollNo: '33105', name: 'Anjali Sharma', attendance: 95 },
-      { rollNo: '33106', name: 'Arjun Deshmukh', attendance: 87 },
+      { rollNo: '33103', name: 'Shubham Khaire', attendance: 88 },
+      { rollNo: '33104', name: 'Sairaj Bodhale', attendance: 92 },
+      { rollNo: '33105', name: 'Shreyash Ingle', attendance: 95 },
+      { rollNo: '33106', name: 'Himanshu Sabale', attendance: 87 },
     ]
   };
 

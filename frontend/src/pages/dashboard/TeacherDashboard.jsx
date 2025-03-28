@@ -7,9 +7,9 @@ function TeacherDashboard() {
   const user = getCurrentUser();
 
   const teacherDetails = {
-    name: "Sumitra Jakhete",
-    email: "ssumitra@pict.edu",
-    phone: "+91 98765 43210",
+    name: "Jyoti Jadhav",
+    email: "jhjadhav@pict.edu",
+    phone: "+91 96653 22346",
     department: "Information Technology",
     subjects: ["Database Management"]
   };
