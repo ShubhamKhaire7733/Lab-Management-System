@@ -1,33 +1,56 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import sequelize from './config/database.js';
+import { config } from './config/config.js';
 import authRoutes from './routes/authRoutes.js';
+import teacherRoutes from './routes/teacherRoutes.js';
+import studentRoutes from './routes/studentRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import assessmentRoutes from './routes/assessmentRoutes.js';
+import sequelize from './config/database.js';
+import setupAssociations from './models/associations.js';
 
+// Load environment variables
 dotenv.config();
 
 const app = express();
 
-app.use(cors());
+// Middleware
+app.use(cors({
+  origin: 'http://localhost:5173', // Vite's default port
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/teachers', teacherRoutes);
+app.use('/api/students', studentRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/assessments', assessmentRoutes);
+
+// Setup model associations
+setupAssociations();
 
 // Database sync and server start
-const PORT = process.env.PORT || 3000;
+const PORT = config.server.port || 3000;
 
-async function startServer() {
+const startServer = async () => {
   try {
-    await sequelize.sync();
-    console.log('Database connected successfully');
-    
+    // Sync database with alter option to preserve data
+    await sequelize.sync({ alter: true });
+    console.log('Database synced successfully');
+
+    // Start server
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
   } catch (error) {
-    console.error('Unable to start server:', error);
+    console.error('Error starting server:', error);
+    process.exit(1);
   }
-}
+};
 
 startServer();

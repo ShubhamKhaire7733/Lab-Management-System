@@ -6,69 +6,7 @@ function BatchAttendance({ defaultAttendance = true }) {
   const { batchId } = useParams();
   const navigate = useNavigate();
 
-  const [students, setStudents] = useState([
-    {
-      rollNo: "33101",
-      name: "Sandesh Nakkawar",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-    {
-      rollNo: "33102",
-      name: "Adwait Borate",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-    // Add more students...
-    {
-      rollNo: "33103",
-      name: "Shubham Khaire",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-    {
-      rollNo: "33104",
-      name: "Sairaj Bodhale",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-    {
-      rollNo: "33105",
-      name: "Shreyash Ingle",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-    {
-      rollNo: "33106",
-      name: "Vikas S Jadhav",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-    {
-      rollNo: "33107",
-      name: "Priya A Sharma",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-    {
-      rollNo: "33108",
-      name: "Rahul K Mehta",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-    {
-      rollNo: "33109",
-      name: "Neha S Gupta",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-    {
-      rollNo: "33110",
-      name: "Amit P Singh",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-    {
-      rollNo: "33111",
-      name: "Pooja R Verma",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-    {
-      rollNo: "33112",
-      name: "Suresh N Patil",
-      attendance: Array(16).fill(defaultAttendance),
-    },
-  ]);
+  const [students, setStudents] = useState([]);
 
   const [practicalDates, setPracticalDates] = useState(
     Array(16).fill({ date: "", startTime: "", endTime: "" })

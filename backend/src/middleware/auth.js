@@ -1,26 +1,70 @@
 import jwt from 'jsonwebtoken';
 
-export const auth = (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
   try {
+    console.log('Auth middleware: Checking authorization header');
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
-      throw new Error();
+      console.log('Auth middleware: No token found in request');
+      return res.status(401).json({ message: 'No authentication token, access denied' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    req.user = decoded;
+    console.log('Auth middleware: Verifying token');
+    const verified = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    req.user = verified;
+    console.log('Auth middleware: Token verified successfully, user role:', verified.role);
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Please authenticate' });
+    console.error('Auth middleware: Token verification failed:', error.message);
+    res.status(401).json({ 
+      message: 'Token verification failed, authorization denied',
+      error: error.message
+    });
   }
+};
+
+export const authorizeAdmin = (req, res, next) => {
+  console.log('Admin authorization middleware: Checking admin role');
+  console.log('Admin authorization middleware: User role:', req.user?.role);
+  
+  if (!req.user) {
+    console.log('Admin authorization middleware: No user found in request');
+    return res.status(401).json({ message: 'No user found in request' });
+  }
+
+  if (req.user.role !== 'admin') {
+    console.log('Admin authorization middleware: User is not an admin');
+    return res.status(403).json({ 
+      message: 'Access denied: admin privileges required',
+      userRole: req.user.role
+    });
+  }
+
+  console.log('Admin authorization middleware: User is authorized as admin');
+  next();
 };
 
 export const checkRole = (roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Access denied' });
+    console.log('Role check middleware: Checking roles:', roles);
+    console.log('Role check middleware: User role:', req.user?.role);
+    
+    if (!req.user) {
+      console.log('Role check middleware: No user found in request');
+      return res.status(401).json({ message: 'No user found in request' });
     }
+
+    if (!roles.includes(req.user.role)) {
+      console.log('Role check middleware: User role not authorized');
+      return res.status(403).json({ 
+        message: 'Access denied: insufficient permissions',
+        requiredRoles: roles,
+        userRole: req.user.role
+      });
+    }
+
+    console.log('Role check middleware: User role authorized');
     next();
   };
 };

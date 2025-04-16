@@ -1,10 +1,6 @@
 import express from 'express';
 import { auth } from '../middleware/auth.js';
-import { 
-  getStudentAssignments,
-  submitAssignment,
-  updateAssignmentMarks
-} from '../controllers/assignmentController.js';
+import { getStudentAssignments, submitAssignment, updateAssignmentMarks } from '../controllers/assignmentController.js';
 
 const router = express.Router();
 

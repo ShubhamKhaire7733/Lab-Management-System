@@ -1,30 +1,29 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Users, ClipboardList, Calendar, ArrowLeft, UserCircle, ClipboardCheck } from 'lucide-react';
 import StudentAssessmentDialog from '../../components/dialog/StudentAssessmentDialog';
 
-function BatchDetails() {
+function BE() {
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const { batchId } = useParams();
   const navigate = useNavigate();
 
   // This would come from an API in production
   const batchInfo = {
-    id: batchId,
+    id: 'A1',
     name: 'Batch A1',
-    subject: 'Data Structures Laboratory',
+    subject: 'Advanced Database Systems',
     teacherName: 'Jyoti Jadhav',
     labCoordinator: 'Sheetal Patil',
     academicYear: '2023-2024',
-    semester: 'II',
+    semester: 'VI',
     schedule: 'Monday, Wednesday (10:30 AM - 12:30 PM)',
     students: [
-      { rollNo: '33101', name: 'Sandesh Nakkawar', attendance: 85 },
-      { rollNo: '33102', name: 'Adwait Borate', attendance: 90 },
-      { rollNo: '33103', name: 'Shubham Khaire', attendance: 88 },
-      { rollNo: '33104', name: 'Sairaj Bodhale', attendance: 92 },
-      { rollNo: '33105', name: 'Shreyash Ingle', attendance: 95 },
-      { rollNo: '33106', name: 'Himanshu Sabale', attendance: 87 },
+      { rollNo: '31101', name: 'Student 1', attendance: 85 },
+      { rollNo: '31102', name: 'Student 2', attendance: 90 },
+      { rollNo: '31103', name: 'Student 3', attendance: 88 },
+      { rollNo: '31104', name: 'Student 4', attendance: 92 },
+      { rollNo: '31105', name: 'Student 5', attendance: 95 },
+      { rollNo: '31106', name: 'Student 6', attendance: 87 },
     ]
   };
 
@@ -88,9 +87,6 @@ function BatchDetails() {
                   <p className="font-medium text-gray-900">{batchInfo.schedule}</p>
                 </div>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-start space-x-3">
                 <UserCircle className="w-5 h-5 text-[#155E95] mt-1" />
                 <div>
@@ -106,10 +102,10 @@ function BatchDetails() {
                 </div>
               </div>
             </div>
-
+            
             <div className="mt-6">
               <button
-                onClick={() => navigate(`/teacher/batch/${batchId}/attendance`)}
+                onClick={() => navigate(`/teacher/batch/${batchInfo.id}/attendance`)}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#155E95] hover:bg-[#0f4a75] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#155E95]"
               >
                 <ClipboardCheck className="w-5 h-5 mr-2" />
@@ -154,4 +150,4 @@ function BatchDetails() {
   );
 }
 
-export default BatchDetails;
+export default BE; 

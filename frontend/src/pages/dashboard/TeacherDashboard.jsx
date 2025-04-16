@@ -1,18 +1,52 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Users, BookOpen, Calendar, User, Mail, Phone, Building } from 'lucide-react';
 import { getCurrentUser } from '../../lib/auth';
+import { getTeacherById } from '../../services/teacherService';
+import { toast } from 'react-toastify';
 
 function TeacherDashboard() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [teacherDetails, setTeacherDetails] = useState(null);
 
-  const teacherDetails = {
-    name: "Jyoti Jadhav",
-    email: "jhjadhav@pict.edu",
-    phone: "+91 96653 22346",
-    department: "Information Technology",
-    subjects: ["Database Management"]
-  };
+  useEffect(() => {
+    const loadTeacherDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        if (!user) {
+          console.error('No user found in localStorage');
+          setError('You must be logged in to view this page');
+          toast.error('Authentication required');
+          return;
+        }
+        
+        if (!user.teacherId) {
+          console.error('No teacherId found in user object:', user);
+          setError('Teacher ID not found. Please contact support.');
+          toast.error('Teacher ID not found');
+          return;
+        }
+        
+        console.log('Fetching teacher details for ID:', user.teacherId);
+        const data = await getTeacherById(user.teacherId);
+        console.log('Loaded teacher details:', data);
+        setTeacherDetails(data);
+      } catch (err) {
+        console.error('Error loading teacher details:', err);
+        setError('Failed to load teacher details. Please try again later.');
+        toast.error('Failed to load teacher details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTeacherDetails();
+  }, [user]);
 
   const academicYears = [
     { id: 'SE', name: 'Second Year (SE)', students: 180, batches: 6 },
@@ -28,13 +62,38 @@ function TeacherDashboard() {
   ];
 
   const handleYearClick = (yearId) => {
-    // Will be implemented in future to navigate to specific year view
-    console.log(`Clicked year: ${yearId}`);
+    if (yearId === 'SE') {
+      navigate('/teacher/year/SE');
+    } else if (yearId === 'TE') {
+      navigate('/teacher/year/TE');
+    } else if (yearId === 'BE') {
+      navigate('/teacher/year/BE');
+    }
   };
 
-  const handleBatchClick = (batchId) => {
-    navigate(`/teacher/batch/${batchId}`);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#155E95]"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-red-500 text-center">
+          <p className="text-xl font-semibold mb-2">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="text-[#155E95] hover:text-[#0f4a75] underline"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -60,62 +119,64 @@ function TeacherDashboard() {
       </div>
 
       {/* Teacher Details Section */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="bg-[#155E95] px-6 py-4">
-            <h2 className="text-xl font-semibold text-white flex items-center">
-              <User className="w-5 h-5 mr-2" />
-              Teacher Profile
-            </h2>
-          </div>
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="flex items-start space-x-3">
-              <User className="w-5 h-5 text-[#155E95] mt-1" />
-              <div>
-                <p className="text-sm text-gray-500">Name</p>
-                <p className="font-medium text-gray-900">{teacherDetails.name}</p>
+      {teacherDetails && (
+        <div className="max-w-7xl mx-auto mb-8">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="bg-[#155E95] px-6 py-4">
+              <h2 className="text-xl font-semibold text-white flex items-center">
+                <User className="w-5 h-5 mr-2" />
+                Teacher Profile
+              </h2>
+            </div>
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="flex items-start space-x-3">
+                <User className="w-5 h-5 text-[#155E95] mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Name</p>
+                  <p className="font-medium text-gray-900">{teacherDetails.name}</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <Mail className="w-5 h-5 text-[#155E95] mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="font-medium text-gray-900">{teacherDetails.email}</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <Phone className="w-5 h-5 text-[#155E95] mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Phone</p>
+                  <p className="font-medium text-gray-900">{teacherDetails.phone || 'Not provided'}</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-3">
+                <Building className="w-5 h-5 text-[#155E95] mt-1" />
+                <div>
+                  <p className="text-sm text-gray-500">Department</p>
+                  <p className="font-medium text-gray-900">{teacherDetails.department}</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-start space-x-3">
-              <Mail className="w-5 h-5 text-[#155E95] mt-1" />
-              <div>
-                <p className="text-sm text-gray-500">Email</p>
-                <p className="font-medium text-gray-900">{teacherDetails.email}</p>
+            <div className="px-6 pb-6">
+              <p className="text-sm text-gray-500 mb-2">Subjects</p>
+              <div className="flex flex-wrap gap-2">
+                {teacherDetails.subjects && teacherDetails.subjects.map((subject, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-[#155E95] bg-opacity-10 text-[#155E95] rounded-full text-sm"
+                  >
+                    {subject}
+                  </span>
+                ))}
               </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <Phone className="w-5 h-5 text-[#155E95] mt-1" />
-              <div>
-                <p className="text-sm text-gray-500">Phone</p>
-                <p className="font-medium text-gray-900">{teacherDetails.phone}</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <Building className="w-5 h-5 text-[#155E95] mt-1" />
-              <div>
-                <p className="text-sm text-gray-500">Department</p>
-                <p className="font-medium text-gray-900">{teacherDetails.department}</p>
-              </div>
-            </div>
-          </div>
-          <div className="px-6 pb-6">
-            <p className="text-sm text-gray-500 mb-2">Subjects</p>
-            <div className="flex flex-wrap gap-2">
-              {teacherDetails.subjects.map((subject, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 bg-[#155E95] bg-opacity-10 text-[#155E95] rounded-full text-sm"
-                >
-                  {subject}
-                </span>
-              ))}
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Years Section */}
-      <div className="max-w-7xl mx-auto mb-8">
+      <div className="max-w-7xl mx-auto">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
           <BookOpen className="w-5 h-5 mr-2" />
           Academic Years
@@ -143,36 +204,6 @@ function TeacherDashboard() {
                     {year.batches} Batches
                   </span>
                 </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Batches Section */}
-      <div className="max-w-7xl mx-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Users className="w-5 h-5 mr-2" />
-          Laboratory Batches
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {batches.map((batch) => (
-            <button
-              key={batch.id}
-              onClick={() => handleBatchClick(batch.id)}
-              className="bg-white hover:shadow-lg transition-all duration-300 rounded-lg shadow-md p-6 text-left border-l-4 border-[#155E95] group"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <h4 className="text-lg font-semibold text-gray-900">
-                  {batch.name}
-                </h4>
-                <span className="px-3 py-1 bg-[#155E95] bg-opacity-10 text-[#155E95] rounded-full text-sm">
-                  {batch.students} Students
-                </span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <Calendar className="w-4 h-4 mr-2 text-[#155E95]" />
-                <span className="text-sm">{batch.schedule}</span>
               </div>
             </button>
           ))}

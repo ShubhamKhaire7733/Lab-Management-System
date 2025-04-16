@@ -1,6 +1,6 @@
 import Assignment from '../models/Assignment.js';
 
-export const getStudentAssignments = async (req, res) => {
+const getStudentAssignments = async (req, res) => {
   try {
     const assignments = await Assignment.findAll({
       where: { studentId: req.params.studentId },
@@ -12,7 +12,7 @@ export const getStudentAssignments = async (req, res) => {
   }
 };
 
-export const submitAssignment = async (req, res) => {
+const submitAssignment = async (req, res) => {
   try {
     const assignment = await Assignment.findByPk(req.params.id);
     if (!assignment) {
@@ -31,7 +31,7 @@ export const submitAssignment = async (req, res) => {
   }
 };
 
-export const updateAssignmentMarks = async (req, res) => {
+const updateAssignmentMarks = async (req, res) => {
   try {
     const assignment = await Assignment.findByPk(req.params.id);
     if (!assignment) {
@@ -50,3 +50,5 @@ export const updateAssignmentMarks = async (req, res) => {
     res.status(500).json({ message: 'Error updating assignment marks' });
   }
 };
+
+export { getStudentAssignments, submitAssignment, updateAssignmentMarks };
