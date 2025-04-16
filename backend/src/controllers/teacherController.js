@@ -5,24 +5,32 @@ import { Op } from 'sequelize';
 // Get all teachers
 export const getAllTeachers = async (req, res) => {
   try {
-    console.log('Fetching all teachers...');
     const teachers = await Teacher.findAll({
-      include: [{
-        model: User,
-        as: 'teacherUserAccount',
-        attributes: ['email', 'role']
-      }],
+      attributes: ['id', 'name', 'email', 'department'],
+      where: {
+        isActive: true
+      },
       order: [['name', 'ASC']]
     });
-    console.log(`Successfully fetched ${teachers.length} teachers`);
-    res.json(teachers);
+
+    if (!teachers || teachers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No teachers found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Teachers fetched successfully',
+      data: teachers
+    });
   } catch (error) {
     console.error('Error fetching teachers:', error);
-    // Send more detailed error information
-    res.status(500).json({ 
-      message: 'Error fetching teachers', 
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch teachers',
+      error: error.message
     });
   }
 };
@@ -33,7 +41,7 @@ export const getTeacherById = async (req, res) => {
     const teacher = await Teacher.findByPk(req.params.id, {
       include: [{
         model: User,
-        as: 'teacherUserAccount',
+        as: 'user',
         attributes: ['email', 'role']
       }]
     });

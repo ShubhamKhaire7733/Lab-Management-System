@@ -10,6 +10,9 @@ import { authenticateToken, authorizeAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Get all teachers (for dropdown) - protected route
+router.get('/all', authenticateToken, getAllTeachers);
+
 // Get all teachers - protected route, admin only
 router.get('/', authenticateToken, authorizeAdmin, getAllTeachers);
 

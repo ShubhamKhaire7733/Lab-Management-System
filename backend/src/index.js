@@ -7,6 +7,7 @@ import teacherRoutes from './routes/teacherRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import assessmentRoutes from './routes/assessmentRoutes.js';
+import batchRoutes from './routes/batchRoutes.js';
 import sequelize from './config/database.js';
 import setupAssociations from './models/associations.js';
 
@@ -30,6 +31,7 @@ app.use('/api/teachers', teacherRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/assessments', assessmentRoutes);
+app.use('/api/batches', batchRoutes);
 
 // Setup model associations
 setupAssociations();
