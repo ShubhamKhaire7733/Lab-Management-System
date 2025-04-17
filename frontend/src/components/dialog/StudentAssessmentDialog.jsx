@@ -39,7 +39,7 @@ function StudentAssessmentDialog({ isOpen, onClose, student }) {
   const loadStudentAssessments = async () => {
     try {
       setLoading(true);
-      const response = await getStudentAssessments(student.rollNo);
+      const response = await getStudentAssessments(student.rollNumber);
       
       console.log('Raw response from server:', response);
       
@@ -197,22 +197,34 @@ function StudentAssessmentDialog({ isOpen, onClose, student }) {
     if (isRowComplete(experiment)) {
       try {
         setLoading(true);
+        setError('');
         
         // Convert empty strings to null for database
         const rppMarks = experiment.marks.rpp === '' ? null : parseInt(experiment.marks.rpp);
         const spoMarks = experiment.marks.spo === '' ? null : parseInt(experiment.marks.spo);
         const assignmentMarks = experiment.marks.assignment === '' ? null : parseInt(experiment.marks.assignment);
         
+        // Validate marks before sending
+        if (rppMarks !== null && (rppMarks < 0 || rppMarks > 5)) {
+          throw new Error('RPP marks must be between 0 and 5');
+        }
+        if (spoMarks !== null && (spoMarks < 0 || spoMarks > 5)) {
+          throw new Error('SPO marks must be between 0 and 5');
+        }
+        if (assignmentMarks !== null && (assignmentMarks < 0 || assignmentMarks > 10)) {
+          throw new Error('Assignment marks must be between 0 and 10');
+        }
+        
         const assessmentData = {
-          studentRollNo: student.rollNo,
+          studentRollNo: student.rollNumber,
           experimentNo: index + 1,
-          scheduledPerformanceDate: experiment.performanceDate.scheduled,
-          actualPerformanceDate: experiment.performanceDate.actual,
-          scheduledSubmissionDate: experiment.submissionDate.scheduled,
-          actualSubmissionDate: experiment.submissionDate.actual,
-          rppMarks: rppMarks,
-          spoMarks: spoMarks,
-          assignmentMarks: assignmentMarks,
+          scheduledPerformanceDate: experiment.performanceDate.scheduled || null,
+          actualPerformanceDate: experiment.performanceDate.actual || null,
+          scheduledSubmissionDate: experiment.submissionDate.scheduled || null,
+          actualSubmissionDate: experiment.submissionDate.actual || null,
+          rppMarks,
+          spoMarks,
+          assignmentMarks,
           id: experiment.id || undefined
         };
 
@@ -233,7 +245,6 @@ function StudentAssessmentDialog({ isOpen, onClose, student }) {
             };
             return newExperiments;
           });
-          setError('');
         } else {
           throw new Error('Invalid response from server');
         }
@@ -268,7 +279,7 @@ function StudentAssessmentDialog({ isOpen, onClose, student }) {
           const assignmentMarks = exp.marks.assignment === '' ? null : parseInt(exp.marks.assignment);
           
           const assessmentData = {
-            studentRollNo: student.rollNo,
+            studentRollNo: student.rollNumber,
             experimentNo: rowIndex + 1,
             scheduledPerformanceDate: exp.performanceDate.scheduled,
             actualPerformanceDate: exp.performanceDate.actual,
@@ -342,22 +353,28 @@ function StudentAssessmentDialog({ isOpen, onClose, student }) {
   const handleSaveFinalAssessment = async () => {
     try {
       setLoading(true);
+      setError('');
       
       // Validate that all required fields are filled
       if (!finalAssessment.proportionateAssignmentMarks) {
         throw new Error('Please fill the proportionate assignment marks');
       }
 
+      const assignmentMarks = parseInt(finalAssessment.proportionateAssignmentMarks);
+      if (assignmentMarks < 0 || assignmentMarks > 60) {
+        throw new Error('Proportionate assignment marks must be between 0 and 60');
+      }
+
       // Validate unit test marks
-      if ((unitTests.test1 !== null && unitTests.test1 > 30) || 
-          (unitTests.test2 !== null && unitTests.test2 > 30) || 
-          (unitTests.test3 !== null && unitTests.test3 > 30)) {
+      if ((unitTests.test1 !== null && (unitTests.test1 < 0 || unitTests.test1 > 30)) || 
+          (unitTests.test2 !== null && (unitTests.test2 < 0 || unitTests.test2 > 30)) || 
+          (unitTests.test3 !== null && (unitTests.test3 < 0 || unitTests.test3 > 30))) {
         throw new Error('Unit test marks cannot exceed 30');
       }
 
       // Create a new assessment with experimentNo as 0 to indicate it's a final assessment
       const assessmentData = {
-        studentRollNo: student.rollNo,
+        studentRollNo: student.rollNumber,
         experimentNo: 0, // Use 0 to indicate this is a final assessment
         scheduledPerformanceDate: new Date().toISOString(),
         actualPerformanceDate: new Date().toISOString(),
@@ -366,11 +383,10 @@ function StudentAssessmentDialog({ isOpen, onClose, student }) {
         rppMarks: 0,
         spoMarks: 0,
         assignmentMarks: 0,
-        finalAssignmentMarks: parseInt(finalAssessment.proportionateAssignmentMarks),
-        testMarks: calculateUnitTestMarks(), // Use converted unit test marks
+        finalAssignmentMarks: assignmentMarks,
+        testMarks: calculateUnitTestMarks(),
         theoryAttendanceMarks: 0,
         finalMarks: parseFloat(finalAssessment.finalMarks),
-        // Add unit test marks
         unitTest1Marks: unitTests.test1 === null ? 0 : unitTests.test1,
         unitTest2Marks: unitTests.test2 === null ? 0 : unitTests.test2,
         unitTest3Marks: unitTests.test3 === null ? 0 : unitTests.test3,
@@ -471,7 +487,7 @@ function StudentAssessmentDialog({ isOpen, onClose, student }) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-500">Roll Number:</label>
-                <p className="mt-1 text-lg font-medium text-gray-900">{student.rollNo}</p>
+                <p className="mt-1 text-lg font-medium text-gray-900">{student.rollNumber}</p>
               </div>
             </div>
 

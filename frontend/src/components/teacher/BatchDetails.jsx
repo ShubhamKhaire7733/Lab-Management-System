@@ -4,10 +4,14 @@ import { getBatchDetails } from '../../services/teacherService';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Loader2, UserCircle } from 'lucide-react';
+import StudentAssessmentDialog from '../dialog/StudentAssessmentDialog';
 
-const StudentCard = ({ student }) => {
+const StudentCard = ({ student, onClick }) => {
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200">
+    <Card 
+      className="hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+      onClick={() => onClick(student)}
+    >
       <CardContent className="pt-6">
         <div className="flex flex-col items-center text-center">
           <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
@@ -35,6 +39,8 @@ const BatchDetails = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [isAssessmentDialogOpen, setIsAssessmentDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchBatchDetails = async () => {
@@ -48,12 +54,8 @@ const BatchDetails = () => {
           throw new Error('Invalid batch data received');
         }
 
-        console.log('✅ Setting batch data:', data.batch);
-        console.log('✅ Setting students data:', data.students);
-        
         setBatch(data.batch);
-        setStudents(Array.isArray(data.students) ? data.students : []);
-        setError(null);
+        setStudents(data.students || []);
       } catch (err) {
         console.error('❌ Error fetching batch details:', err);
         setError(err.message || 'Failed to fetch batch details');
@@ -65,67 +67,63 @@ const BatchDetails = () => {
     fetchBatchDetails();
   }, [batchId]);
 
+  const handleStudentClick = (student) => {
+    setSelectedStudent(student);
+    setIsAssessmentDialogOpen(true);
+  };
+
+  const handleCloseAssessmentDialog = () => {
+    setIsAssessmentDialogOpen(false);
+    setSelectedStudent(null);
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-[#155E95]" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
+      <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-red-500 mb-4">{error}</p>
-        <Button onClick={() => navigate('/teacher/dashboard')}>Back to Dashboard</Button>
+        <Button onClick={() => navigate(-1)}>Go Back</Button>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Batch Details</h1>
-        <Button onClick={() => navigate('/teacher/dashboard')}>Back to Dashboard</Button>
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900">
+          {batch?.name || 'Batch Details'}
+        </h1>
+        <Button onClick={() => navigate(-1)}>Back to Dashboard</Button>
       </div>
 
-      {batch && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>{batch.name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <p className="font-semibold text-gray-700">Subject:</p>
-                <p className="text-gray-600">{batch.subjectName} ({batch.subjectCode})</p>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-700">Year:</p>
-                <p className="text-gray-600">{batch.year}</p>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-700">Division:</p>
-                <p className="text-gray-600">{batch.division}</p>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-700">Schedule:</p>
-                <p className="text-gray-600">{batch.day} at {batch.time}</p>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-700">Roll Number Range:</p>
-                <p className="text-gray-600">{batch.rollNumberStart} - {batch.rollNumberEnd}</p>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-700">Duration:</p>
-                <p className="text-gray-600">
-                  {new Date(batch.startDate).toLocaleDateString()} to {new Date(batch.endDate).toLocaleDateString()}
-                </p>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Batch Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <p className="text-sm text-gray-500">Year</p>
+              <p className="font-medium">{batch?.year}</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div>
+              <p className="text-sm text-gray-500">Division</p>
+              <p className="font-medium">{batch?.division}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Schedule</p>
+              <p className="font-medium">{batch?.day} at {batch?.time}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -139,7 +137,11 @@ const BatchDetails = () => {
               {students
                 .sort((a, b) => a.rollNumber - b.rollNumber)
                 .map((student) => (
-                  <StudentCard key={student.id} student={student} />
+                  <StudentCard 
+                    key={student.id} 
+                    student={student} 
+                    onClick={handleStudentClick}
+                  />
                 ))}
             </div>
           ) : (
@@ -149,6 +151,14 @@ const BatchDetails = () => {
           )}
         </CardContent>
       </Card>
+
+      {selectedStudent && (
+        <StudentAssessmentDialog
+          isOpen={isAssessmentDialogOpen}
+          onClose={handleCloseAssessmentDialog}
+          student={selectedStudent}
+        />
+      )}
     </div>
   );
 };

@@ -13,9 +13,9 @@ const getStudentModel = (rollNo) => {
 // Save or update assessment data
 const saveAssessment = async (req, res) => {
   try {
-    console.log('Received assessment data:', req.body);
+    console.log('Received request body:', req.body);
     
-    const { 
+    const {
       studentRollNo, 
       experimentNo, 
       scheduledPerformanceDate, 
@@ -35,6 +35,26 @@ const saveAssessment = async (req, res) => {
       unitTest3Marks,
       convertedUnitTestMarks
     } = req.body;
+
+    console.log('Extracted studentRollNo:', studentRollNo);
+    console.log('Extracted experimentNo:', experimentNo);
+
+    // Validate required fields
+    if (!studentRollNo || studentRollNo.trim() === '') {
+      console.error('Missing studentRollNo in request');
+      return res.status(400).json({
+        success: false,
+        message: 'Student roll number is required'
+      });
+    }
+
+    if (experimentNo === undefined || experimentNo === null) {
+      console.error('Missing experimentNo in request');
+      return res.status(400).json({
+        success: false,
+        message: 'Experiment number is required'
+      });
+    }
 
     let assessment;
     
@@ -69,30 +89,40 @@ const saveAssessment = async (req, res) => {
       if (unitTest3Marks) assessment.unitTest3Marks = unitTest3Marks;
       if (convertedUnitTestMarks) assessment.convertedUnitTestMarks = convertedUnitTestMarks;
       
-      await assessment.save();
-      console.log('Assessment updated:', assessment.toJSON());
+      try {
+        await assessment.save();
+        console.log('Assessment updated:', assessment.toJSON());
+      } catch (saveError) {
+        console.error('Error saving assessment:', saveError);
+        throw saveError;
+      }
     } else {
       // Create new assessment
-      assessment = await Assessment.create({
-        studentRollNo,
-        experimentNo,
-        scheduledPerformanceDate,
-        actualPerformanceDate,
-        scheduledSubmissionDate,
-        actualSubmissionDate,
-        rppMarks,
-        spoMarks,
-        assignmentMarks,
-        finalAssignmentMarks,
-        testMarks,
-        theoryAttendanceMarks,
-        finalMarks,
-        unitTest1Marks,
-        unitTest2Marks,
-        unitTest3Marks,
-        convertedUnitTestMarks
-      });
-      console.log('New assessment created:', assessment.toJSON());
+      try {
+        assessment = await Assessment.create({
+          studentRollNo,
+          experimentNo,
+          scheduledPerformanceDate,
+          actualPerformanceDate,
+          scheduledSubmissionDate,
+          actualSubmissionDate,
+          rppMarks,
+          spoMarks,
+          assignmentMarks,
+          finalAssignmentMarks,
+          testMarks,
+          theoryAttendanceMarks,
+          finalMarks,
+          unitTest1Marks,
+          unitTest2Marks,
+          unitTest3Marks,
+          convertedUnitTestMarks
+        });
+        console.log('New assessment created:', assessment.toJSON());
+      } catch (createError) {
+        console.error('Error creating assessment:', createError);
+        throw createError;
+      }
     }
 
     res.status(200).json({
@@ -102,7 +132,7 @@ const saveAssessment = async (req, res) => {
       data: assessment
     });
   } catch (error) {
-    console.error('Error saving assessment:', error);
+    console.error('Error in saveAssessment:', error);
     
     // Log more detailed error information
     if (error.name === 'SequelizeValidationError') {
