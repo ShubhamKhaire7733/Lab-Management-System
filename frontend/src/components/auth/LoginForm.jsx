@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { setToken } from '../../lib/auth';
-import { LockKeyhole, Mail, UserCircle } from 'lucide-react';
+import { LockKeyhole, Mail, UserCircle, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 function LoginForm() {
@@ -10,6 +10,7 @@ function LoginForm() {
   const [role, setRole] = useState('student');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -71,13 +72,25 @@ function LoginForm() {
             <div className="relative">
               <LockKeyhole className="absolute top-3 left-3 h-5 w-5 text-[#155E95]" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="appearance-none rounded-none relative block w-full px-12 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#155E95] focus:border-[#155E95] focus:z-10 sm:text-sm"
                 placeholder="Password"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none z-20"
+                style={{ pointerEvents: 'auto' }}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
             </div>
             <div className="relative">
               <UserCircle className="absolute top-3 left-3 h-5 w-5 text-[#155E95]" />

@@ -42,6 +42,10 @@ const StudentDashboard = () => {
     fetchStudentData();
   }, []);
 
+  const handleAssessmentClick = () => {
+    navigate('/student/assessments');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -147,47 +151,6 @@ const StudentDashboard = () => {
             </div>
           </Card>
 
-          {/* Batch Information Section */}
-          {student.batch && (
-            <Card 
-              className={`col-span-1 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${activeCard === 'batch' ? 'ring-2 ring-green-500' : ''}`}
-              onMouseEnter={() => setActiveCard('batch')}
-              onMouseLeave={() => setActiveCard(null)}
-            >
-              <div className="p-6">
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className="bg-gradient-to-br from-green-100 to-green-200 p-3 rounded-full">
-                    <Calendar className="h-8 w-8 text-green-600" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900">Batch Information</h2>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3 group">
-                    <BookOpen className="h-5 w-5 text-gray-400 group-hover:text-green-500 transition-colors duration-200" />
-                    <div>
-                      <p className="text-sm text-gray-500">Batch Name</p>
-                      <p className="font-medium text-gray-900 group-hover:text-green-600 transition-colors duration-200">{student.batch.name}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 group">
-                    <Hash className="h-5 w-5 text-gray-400 group-hover:text-green-500 transition-colors duration-200" />
-                    <div>
-                      <p className="text-sm text-gray-500">Division</p>
-                      <p className="font-medium text-gray-900 group-hover:text-green-600 transition-colors duration-200">{student.batch.division}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3 group">
-                    <Clock className="h-5 w-5 text-gray-400 group-hover:text-green-500 transition-colors duration-200" />
-                    <div>
-                      <p className="text-sm text-gray-500">Year</p>
-                      <p className="font-medium text-gray-900 group-hover:text-green-600 transition-colors duration-200">{student.batch.year}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )}
-
           {/* Summary Section */}
           <Card 
             className={`col-span-1 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${activeCard === 'summary' ? 'ring-2 ring-purple-500' : ''}`}
@@ -202,17 +165,51 @@ const StudentDashboard = () => {
                 <h2 className="text-xl font-semibold text-gray-900">Summary</h2>
               </div>
               <div className="space-y-4">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg transform hover:scale-105 transition-transform duration-200">
-                  <p className="text-sm text-gray-500">Total Assessments</p>
-                  <p className="text-2xl font-bold text-blue-600">{student.assessments?.length || 0}</p>
+                <div 
+                  className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg transform hover:scale-105 transition-transform duration-200 cursor-pointer group"
+                  onClick={handleAssessmentClick}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500">Total Assessments</p>
+                      <p className="text-2xl font-bold text-blue-600">{student.assessments?.length || 0}</p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-blue-400 group-hover:text-blue-600 transform group-hover:translate-x-1 transition-all" />
+                  </div>
                 </div>
                 <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg transform hover:scale-105 transition-transform duration-200">
                   <p className="text-sm text-gray-500">Attendance Records</p>
                   <p className="text-2xl font-bold text-green-600">{student.attendance?.length || 0}</p>
                 </div>
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg transform hover:scale-105 transition-transform duration-200">
-                  <p className="text-sm text-gray-500">Performance Records</p>
-                  <p className="text-2xl font-bold text-purple-600">{student.performance?.length || 0}</p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Unit Test Marks Section */}
+          <Card 
+            className={`col-span-1 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${activeCard === 'unitTests' ? 'ring-2 ring-orange-500' : ''}`}
+            onMouseEnter={() => setActiveCard('unitTests')}
+            onMouseLeave={() => setActiveCard(null)}
+          >
+            <div className="p-6">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-3 rounded-full">
+                  <Award className="h-8 w-8 text-orange-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">Unit Test Marks</h2>
+              </div>
+              <div className="space-y-4">
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
+                  <p className="text-sm text-gray-500">Test 1</p>
+                  <p className="text-2xl font-bold text-orange-600">{student.assessments?.[0]?.unitTest1Marks || 'N/A'} / 30</p>
+                </div>
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
+                  <p className="text-sm text-gray-500">Test 2</p>
+                  <p className="text-2xl font-bold text-orange-600">{student.assessments?.[0]?.unitTest2Marks || 'N/A'} / 30</p>
+                </div>
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
+                  <p className="text-sm text-gray-500">Test 3</p>
+                  <p className="text-2xl font-bold text-orange-600">{student.assessments?.[0]?.unitTest3Marks || 'N/A'} / 30</p>
                 </div>
               </div>
             </div>

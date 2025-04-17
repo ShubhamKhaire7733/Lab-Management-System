@@ -17,6 +17,7 @@ import TE from './pages/dashboard/TE';
 import BE from './pages/dashboard/BE';
 import AuthTest from './components/AuthTest';
 import BatchDetails from './components/teacher/BatchDetails';
+import AssessmentDetails from './components/student/AssessmentDetails';
 
 function PrivateRoute({ children, allowedRoles }) {
   const user = getCurrentUser();
@@ -51,6 +52,7 @@ function App() {
                 </PrivateRoute>
               } />
               <Route path="/student/dashboard" element={<StudentDashboard />} />
+              <Route path="/student/assessments" element={<AssessmentDetails />} />
               <Route path="/teacher" element={
                 <PrivateRoute allowedRoles={['teacher']}>
                   <TeacherDashboard />
