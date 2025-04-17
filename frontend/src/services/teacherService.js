@@ -44,6 +44,80 @@ axiosInstance.interceptors.response.use(
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+// Get current teacher's profile
+export const getCurrentTeacher = async () => {
+  try {
+    console.log('Fetching current teacher profile from:', `${API_URL}/teachers/me`);
+    const response = await axiosInstance.get(`${API_URL}/teachers/me`);
+    console.log('Current teacher profile fetched successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching current teacher profile:', error);
+    throw error;
+  }
+};
+
+// Get current teacher's batches
+export const getCurrentTeacherBatches = async () => {
+  try {
+    console.log('🔍 Fetching current teacher batches...');
+    const token = localStorage.getItem('token');
+    console.log('🔑 Token available:', !!token);
+    
+    // Fetch the teacher's batches directly from the /batches endpoint
+    const response = await axiosInstance.get(`${API_URL}/teachers/batches`);
+    console.log('📦 Raw response:', response);
+    console.log('📦 Response data:', response.data);
+    console.log('📦 Response data type:', typeof response.data);
+    console.log('📦 Is response.data array?', Array.isArray(response.data));
+
+    // The response data is already in the correct format
+    const batches = Array.isArray(response.data) ? response.data : [];
+    
+    console.log('✅ Final processed batches:', batches);
+    console.log('✅ Final batches length:', batches.length);
+    console.log('✅ Final batches type:', typeof batches);
+    console.log('✅ Final batches isArray:', Array.isArray(batches));
+
+    return batches;
+  } catch (error) {
+    console.error('❌ Error fetching teacher batches:', error);
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    return []; // Always return an empty array on error
+  }
+};
+
+// Get batch details for current teacher
+export const getBatchDetails = async (batchId) => {
+  try {
+    console.log(`🔍 Fetching batch details for ID: ${batchId}`);
+    const response = await axiosInstance.get(`${API_URL}/teachers/batches/${batchId}`);
+    console.log('📦 Raw response:', response);
+    console.log('📦 Response data:', response.data);
+
+    if (!response.data || !response.data.batch) {
+      throw new Error('Invalid batch data received');
+    }
+
+    return {
+      batch: response.data.batch,
+      students: response.data.students || []
+    };
+  } catch (error) {
+    console.error('❌ Error fetching batch details:', error);
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    throw error;
+  }
+};
+
 // Get all teachers
 export const getAllTeachers = async () => {
   try {
@@ -79,16 +153,11 @@ export const getTeachersByDepartment = async (department) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching teachers by department:', error);
-    if (error.response) {
-      throw error.response.data || { message: `Server responded with status ${error.response.status}` };
-    } else if (error.request) {
-      throw { message: 'No response received from server' };
-    } else {
-      throw { message: error.message };
-    }
+    throw error;
   }
 };
 
+// Create a new teacher
 export const createTeacher = async (teacherData) => {
   try {
     console.log('Creating teacher with data:', teacherData);
@@ -101,6 +170,7 @@ export const createTeacher = async (teacherData) => {
   }
 };
 
+// Update a teacher
 export const updateTeacher = async (id, teacherData) => {
   try {
     console.log(`Updating teacher with ID: ${id} with data:`, teacherData);
@@ -113,6 +183,7 @@ export const updateTeacher = async (id, teacherData) => {
   }
 };
 
+// Delete a teacher
 export const deleteTeacher = async (id) => {
   try {
     console.log(`Deleting teacher with ID: ${id}`);

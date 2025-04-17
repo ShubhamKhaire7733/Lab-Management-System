@@ -113,7 +113,13 @@ const Assessment = sequelize.define('Assessment', {
     allowNull: true
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  indexes: [
+    {
+      fields: ['studentRollNo', 'experimentNo'],
+      name: 'assessment_student_experiment_idx'
+    }
+  ]
 });
 
 export default Assessment; 

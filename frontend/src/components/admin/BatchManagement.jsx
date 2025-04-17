@@ -15,7 +15,9 @@ const BatchManagement = () => {
     time: '',
     startDate: '',
     endDate: '',
-    teacherId: ''
+    teacherId: '',
+    rollNumberStart: '',
+    rollNumberEnd: ''
   });
   const [editingBatch, setEditingBatch] = useState(null);
 
@@ -114,7 +116,9 @@ const BatchManagement = () => {
           time: '',
           startDate: '',
           endDate: '',
-          teacherId: ''
+          teacherId: '',
+          rollNumberStart: '',
+          rollNumberEnd: ''
         });
       } else {
         throw new Error(data.message);
@@ -136,7 +140,9 @@ const BatchManagement = () => {
       time: batch.time,
       startDate: batch.startDate ? new Date(batch.startDate).toISOString().split('T')[0] : '',
       endDate: batch.endDate ? new Date(batch.endDate).toISOString().split('T')[0] : '',
-      teacherId: batch.teacherId
+      teacherId: batch.teacherId,
+      rollNumberStart: batch.rollNumberStart || '',
+      rollNumberEnd: batch.rollNumberEnd || ''
     });
     setShowForm(true);
   };
@@ -186,7 +192,9 @@ const BatchManagement = () => {
                 time: '',
                 startDate: '',
                 endDate: '',
-                teacherId: ''
+                teacherId: '',
+                rollNumberStart: '',
+                rollNumberEnd: ''
               });
             }
           }}
@@ -266,6 +274,34 @@ const BatchManagement = () => {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700">Roll Number Range</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  name="rollNumberStart"
+                  value={formData.rollNumberStart}
+                  onChange={handleInputChange}
+                  required
+                  min="23101"
+                  max="23150"
+                  placeholder="Start (23101-23150)"
+                  className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+                <input
+                  type="number"
+                  name="rollNumberEnd"
+                  value={formData.rollNumberEnd}
+                  onChange={handleInputChange}
+                  required
+                  min="23101"
+                  max="23150"
+                  placeholder="End (23101-23150)"
+                  className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-gray-700">Day</label>
               <select
                 name="day"
@@ -340,6 +376,7 @@ const BatchManagement = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Division</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll Numbers</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Schedule</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
@@ -353,6 +390,7 @@ const BatchManagement = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{batch.year}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{batch.division}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{batch.rollNumberStart} - {batch.rollNumberEnd}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {batch.day} at {batch.time}
                 </td>

@@ -1,5 +1,8 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
+import Teacher from './Teacher.js';
+import Subject from './Subject.js';
+import Batch from './Batch.js';
 
 const TeacherSubjectBatch = sequelize.define('TeacherSubjectBatch', {
   id: {
@@ -11,7 +14,7 @@ const TeacherSubjectBatch = sequelize.define('TeacherSubjectBatch', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Teachers',
+      model: Teacher,
       key: 'id'
     }
   },
@@ -19,7 +22,7 @@ const TeacherSubjectBatch = sequelize.define('TeacherSubjectBatch', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Subjects',
+      model: Subject,
       key: 'id'
     }
   },
@@ -27,7 +30,7 @@ const TeacherSubjectBatch = sequelize.define('TeacherSubjectBatch', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Batches',
+      model: Batch,
       key: 'id'
     }
   },

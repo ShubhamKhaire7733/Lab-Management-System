@@ -36,18 +36,19 @@ const User = sequelize.define('User', {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
       }
+    },
+    beforeUpdate: async (user) => {
+      if (user.changed('password')) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(user.password, salt);
+      }
     }
   }
 });
 
-// Add instance method to compare passwords
+// Add method to compare password
 User.prototype.comparePassword = async function(candidatePassword) {
-  try {
-    return await bcrypt.compare(candidatePassword, this.password);
-  } catch (error) {
-    console.error('Error comparing passwords:', error);
-    return false;
-  }
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Define associations in associations.js instead

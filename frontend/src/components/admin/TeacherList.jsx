@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Table, 
   TableBody, 
@@ -19,10 +20,11 @@ import {
   Alert
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { getAllTeachers, getTeacherById, updateTeacher, deleteTeacher } from '../services/teacherService';
+import { getAllTeachers, getTeacherById, updateTeacher, deleteTeacher } from '../../services/adminService';
 import { toast } from 'react-toastify';
 
 const TeacherList = () => {
+  const navigate = useNavigate();
   const [teachers, setTeachers] = useState([]);
   const [open, setOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
@@ -37,8 +39,16 @@ const TeacherList = () => {
   });
 
   useEffect(() => {
+    // Check if user is admin
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'admin') {
+      toast.error('Access denied: Admin privileges required');
+      navigate('/login');
+      return;
+    }
+
     loadTeachers();
-  }, []);
+  }, [navigate]);
 
   const loadTeachers = async () => {
     try {
@@ -50,8 +60,13 @@ const TeacherList = () => {
       setTeachers(data);
     } catch (error) {
       console.error('Error loading teachers:', error);
-      setError('Failed to load teachers. Please try again later.');
-      toast.error('Failed to load teachers');
+      if (error.response?.status === 403) {
+        toast.error('Access denied: Admin privileges required');
+        navigate('/login');
+      } else {
+        setError('Failed to load teachers. Please try again later.');
+        toast.error('Failed to load teachers');
+      }
     } finally {
       setLoading(false);
     }
@@ -98,11 +113,18 @@ const TeacherList = () => {
     try {
       if (selectedTeacher) {
         await updateTeacher(selectedTeacher.id, formData);
+        toast.success('Teacher updated successfully');
       }
       handleClose();
       loadTeachers();
     } catch (error) {
       console.error('Error saving teacher:', error);
+      if (error.response?.status === 403) {
+        toast.error('Access denied: Admin privileges required');
+        navigate('/login');
+      } else {
+        toast.error('Failed to save teacher');
+      }
     }
   };
 
@@ -110,9 +132,16 @@ const TeacherList = () => {
     if (window.confirm('Are you sure you want to delete this teacher?')) {
       try {
         await deleteTeacher(id);
+        toast.success('Teacher deleted successfully');
         loadTeachers();
       } catch (error) {
         console.error('Error deleting teacher:', error);
+        if (error.response?.status === 403) {
+          toast.error('Access denied: Admin privileges required');
+          navigate('/login');
+        } else {
+          toast.error('Failed to delete teacher');
+        }
       }
     }
   };
@@ -227,14 +256,14 @@ const TeacherList = () => {
               value={formData.subjects}
               onChange={handleChange}
               margin="normal"
-              required
+              helperText="Enter subjects separated by commas"
             />
           </form>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
-            Save
+          <Button onClick={handleSubmit} color="primary">
+            {selectedTeacher ? 'Update' : 'Add'}
           </Button>
         </DialogActions>
       </Dialog>

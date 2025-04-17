@@ -16,6 +16,7 @@ import SE from './pages/dashboard/SE';
 import TE from './pages/dashboard/TE';
 import BE from './pages/dashboard/BE';
 import AuthTest from './components/AuthTest';
+import BatchDetails from './components/teacher/BatchDetails';
 
 function PrivateRoute({ children, allowedRoles }) {
   const user = getCurrentUser();
@@ -52,6 +53,11 @@ function App() {
               <Route path="/teacher" element={
                 <PrivateRoute allowedRoles={['teacher']}>
                   <TeacherDashboard />
+                </PrivateRoute>
+              } />
+              <Route path="/teacher/batch/:batchId" element={
+                <PrivateRoute allowedRoles={['teacher']}>
+                  <BatchDetails />
                 </PrivateRoute>
               } />
               <Route path="/teacher/year/SE" element={

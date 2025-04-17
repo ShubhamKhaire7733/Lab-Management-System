@@ -96,6 +96,22 @@ const setupAssociations = () => {
     otherKey: 'batchId'
   });
 
+  // TeacherSubjectBatch associations
+  TeacherSubjectBatch.belongsTo(Teacher, {
+    foreignKey: 'teacherId',
+    as: 'assignedTeacher'
+  });
+
+  TeacherSubjectBatch.belongsTo(Batch, {
+    foreignKey: 'batchId',
+    as: 'assignedBatch'
+  });
+
+  TeacherSubjectBatch.belongsTo(Subject, {
+    foreignKey: 'subjectId',
+    as: 'assignedSubject'
+  });
+
   // Assignment associations
   Assignment.belongsTo(Student, {
     foreignKey: 'studentId',
@@ -111,11 +127,13 @@ const setupAssociations = () => {
 
   // Attendance associations
   Attendance.belongsTo(Student, {
-    foreignKey: 'studentId'
+    foreignKey: 'studentId',
+    as: 'student'
   });
 
   Attendance.belongsTo(Batch, {
-    foreignKey: 'batchId'
+    foreignKey: 'batchId',
+    as: 'batch'
   });
 
   console.log('Model associations set up successfully');

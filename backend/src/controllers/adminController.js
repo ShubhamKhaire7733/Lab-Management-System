@@ -142,19 +142,43 @@ export const getBatches = async (req, res) => {
           attributes: ['id', 'name', 'email']
         },
         {
-          model: TeacherSubjectBatch,
-          include: [
-            {
-              model: Subject,
-              attributes: ['id', 'name', 'code']
-            }
-          ]
+          model: Subject,
+          through: TeacherSubjectBatch,
+          attributes: ['id', 'name', 'code']
         }
       ],
       order: [['createdAt', 'DESC']]
     });
-    res.json(batches);
+
+    // Format the response
+    const formattedBatches = batches.map(batch => {
+      const batchData = batch.toJSON();
+      return {
+        id: batchData.id,
+        name: batchData.name,
+        year: batchData.year,
+        division: batchData.division,
+        day: batchData.day,
+        time: batchData.time,
+        startDate: batchData.startDate,
+        endDate: batchData.endDate,
+        teacher: batchData.Teacher ? {
+          id: batchData.Teacher.id,
+          name: batchData.Teacher.name,
+          email: batchData.Teacher.email
+        } : null,
+        subject: batchData.Subjects && batchData.Subjects[0] ? {
+          id: batchData.Subjects[0].id,
+          name: batchData.Subjects[0].name,
+          code: batchData.Subjects[0].code
+        } : null
+      };
+    });
+
+    console.log('Formatted batches:', formattedBatches);
+    res.json(formattedBatches);
   } catch (error) {
+    console.error('Error fetching batches:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -343,15 +367,129 @@ export const getSubjects = async (req, res) => {
 export const allocateTeacher = async (req, res) => {
   try {
     const { teacherId, subjectId, batchId, division, academicYear } = req.body;
-    const allocation = await TeacherSubjectBatch.create({
+    
+    console.log('Creating teacher allocation with data:', {
       teacherId,
       subjectId,
       batchId,
       division,
       academicYear
     });
-    res.status(201).json(allocation);
+    
+    // Verify that the teacher, subject, and batch exist
+    const teacher = await Teacher.findByPk(teacherId);
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher not found' });
+    }
+    
+    const subject = await Subject.findByPk(subjectId);
+    if (!subject) {
+      return res.status(404).json({ message: 'Subject not found' });
+    }
+    
+    const batch = await Batch.findByPk(batchId);
+    if (!batch) {
+      return res.status(404).json({ message: 'Batch not found' });
+    }
+    
+    // Check if the allocation already exists
+    const existingAllocation = await TeacherSubjectBatch.findOne({
+      where: {
+        teacherId,
+        subjectId,
+        batchId,
+        division,
+        academicYear,
+        isActive: true
+      }
+    });
+    
+    if (existingAllocation) {
+      return res.status(400).json({ 
+        message: 'Teacher allocation already exists',
+        details: {
+          teacher: teacher.name,
+          subject: subject.name,
+          batch: batch.name,
+          division,
+          academicYear
+        }
+      });
+    }
+    
+    // Create the allocation
+    const allocation = await TeacherSubjectBatch.create({
+      teacherId,
+      subjectId,
+      batchId,
+      division,
+      academicYear,
+      isActive: true
+    });
+    
+    console.log('Created teacher allocation:', allocation.toJSON());
+    
+    // Fetch the created allocation with associations
+    const createdAllocation = await TeacherSubjectBatch.findByPk(allocation.id, {
+      include: [
+        {
+          model: Teacher,
+          as: 'assignedTeacher',
+          include: [{
+            model: User,
+            as: 'user',
+            attributes: ['email', 'role']
+          }]
+        },
+        {
+          model: Subject,
+          as: 'assignedSubject',
+          attributes: ['id', 'name', 'code']
+        },
+        {
+          model: Batch,
+          as: 'assignedBatch',
+          attributes: ['id', 'name', 'year', 'division', 'day', 'time']
+        }
+      ]
+    });
+    
+    // Format the response
+    const allocationData = createdAllocation.toJSON();
+    const formattedAllocation = {
+      id: allocationData.id,
+      teacher: allocationData.assignedTeacher ? {
+        id: allocationData.assignedTeacher.id,
+        name: allocationData.assignedTeacher.name,
+        email: allocationData.assignedTeacher.email
+      } : null,
+      subject: allocationData.assignedSubject ? {
+        id: allocationData.assignedSubject.id,
+        name: allocationData.assignedSubject.name,
+        code: allocationData.assignedSubject.code
+      } : null,
+      batch: allocationData.assignedBatch ? {
+        id: allocationData.assignedBatch.id,
+        name: allocationData.assignedBatch.name,
+        year: allocationData.assignedBatch.year,
+        division: allocationData.assignedBatch.division,
+        day: allocationData.assignedBatch.day,
+        time: allocationData.assignedBatch.time
+      } : null,
+      division: allocationData.division,
+      academicYear: allocationData.academicYear
+    };
+    
+    console.log('Formatted allocation response:', formattedAllocation);
+    res.status(201).json(formattedAllocation);
   } catch (error) {
+    console.error('Error creating teacher allocation:', error);
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ 
+        message: 'Teacher allocation already exists',
+        error: error.errors[0].message
+      });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -393,27 +531,75 @@ export const deleteTeacherAllocation = async (req, res) => {
 
 export const getTeacherAllocations = async (req, res) => {
   try {
+    console.log('Fetching teacher allocations...');
+    
     const allocations = await TeacherSubjectBatch.findAll({
       include: [
         {
           model: Teacher,
+          as: 'assignedTeacher',
           include: [{
             model: User,
-            attributes: ['name', 'email']
+            as: 'user',
+            attributes: ['email', 'role']
           }]
         },
         {
           model: Subject,
-          attributes: ['name', 'code']
+          as: 'assignedSubject',
+          attributes: ['id', 'name', 'code']
         },
         {
           model: Batch,
-          attributes: ['name']
+          as: 'assignedBatch',
+          attributes: ['id', 'name', 'year', 'division', 'day', 'time']
         }
-      ]
+      ],
+      where: {
+        isActive: true
+      },
+      order: [['createdAt', 'DESC']]
     });
-    res.json(allocations);
+
+    console.log('Raw allocations:', JSON.stringify(allocations, null, 2));
+
+    // Format the response
+    const formattedAllocations = allocations.map(allocation => {
+      const allocationData = allocation.toJSON();
+      console.log('Processing allocation:', allocationData.id);
+      console.log('Teacher data:', allocationData.assignedTeacher);
+      console.log('Subject data:', allocationData.assignedSubject);
+      console.log('Batch data:', allocationData.assignedBatch);
+      
+      return {
+        id: allocationData.id,
+        teacher: allocationData.assignedTeacher ? {
+          id: allocationData.assignedTeacher.id,
+          name: allocationData.assignedTeacher.name,
+          email: allocationData.assignedTeacher.email
+        } : null,
+        subject: allocationData.assignedSubject ? {
+          id: allocationData.assignedSubject.id,
+          name: allocationData.assignedSubject.name,
+          code: allocationData.assignedSubject.code
+        } : null,
+        batch: allocationData.assignedBatch ? {
+          id: allocationData.assignedBatch.id,
+          name: allocationData.assignedBatch.name,
+          year: allocationData.assignedBatch.year,
+          division: allocationData.assignedBatch.division,
+          day: allocationData.assignedBatch.day,
+          time: allocationData.assignedBatch.time
+        } : null,
+        division: allocationData.division,
+        academicYear: allocationData.academicYear
+      };
+    });
+
+    console.log('Formatted allocations:', formattedAllocations);
+    res.json(formattedAllocations);
   } catch (error) {
+    console.error('Error fetching teacher allocations:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -474,21 +660,28 @@ export const createTeacher = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
     
+    // Use default password if none provided
+    const defaultPassword = 'teacher123';
+    const finalPassword = password || defaultPassword;
+    
     // Create user first
     const user = await User.create({
       name,
       email,
-      password,
+      password: finalPassword,
       role: 'teacher'
     });
 
     // Create teacher profile
     const teacher = await Teacher.create({
-      userId: user.id
+      userId: user.id,
+      name,
+      email
     });
 
     res.status(201).json({
       message: 'Teacher created successfully',
+      defaultPassword: !password ? defaultPassword : undefined,
       teacher: {
         id: teacher.id,
         user: {
@@ -561,11 +754,32 @@ export const getTeachers = async (req, res) => {
     const teachers = await Teacher.findAll({
       include: [{
         model: User,
-        attributes: ['id', 'name', 'email', 'role']
-      }]
+        as: 'user',
+        attributes: ['id', 'email', 'role']
+      }],
+      where: {
+        isActive: true
+      },
+      order: [['name', 'ASC']]
     });
-    res.json(teachers);
+
+    // Format the response to include user information
+    const formattedTeachers = teachers.map(teacher => {
+      const teacherData = teacher.toJSON();
+      return {
+        id: teacherData.id,
+        name: teacherData.name,
+        email: teacherData.email,
+        department: teacherData.department,
+        phone: teacherData.phone,
+        subjects: teacherData.subjects ? JSON.parse(teacherData.subjects) : []
+      };
+    });
+
+    console.log('Formatted teachers:', formattedTeachers);
+    res.json(formattedTeachers);
   } catch (error) {
+    console.error('Error fetching teachers:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -686,13 +900,18 @@ export const uploadData = async (req, res) => {
               let user = await User.findOne({ where: { email: row.email } });
               
               if (!user) {
-                // Create new user
+                // Create new user with default password if none provided
+                const defaultPassword = 'teacher123';
                 user = await User.create({
                   name: row.name,
                   email: row.email,
-                  password: row.password || 'password123', // Default password
+                  password: row.password || defaultPassword,
                   role: 'teacher'
                 });
+              } else if (row.password) {
+                // Update password if provided in CSV
+                user.password = row.password;
+                await user.save();
               }
               
               // Check if teacher already exists
@@ -705,7 +924,7 @@ export const uploadData = async (req, res) => {
                   name: row.name,
                   email: row.email,
                   department: row.department,
-                  subjects: row.subjects ? JSON.parse(row.subjects) : [],
+                  subjects: row.subjects ? JSON.parse(row.subjects.replace(/'/g, '"')) : [],
                   phone: row.phone || null
                 });
               } else {
@@ -714,12 +933,16 @@ export const uploadData = async (req, res) => {
                   name: row.name,
                   email: row.email,
                   department: row.department,
-                  subjects: row.subjects ? JSON.parse(row.subjects) : existingTeacher.subjects,
+                  subjects: row.subjects ? JSON.parse(row.subjects.replace(/'/g, '"')) : existingTeacher.subjects,
                   phone: row.phone || existingTeacher.phone
                 });
               }
               
-              return { success: true, email: row.email };
+              return { 
+                success: true, 
+                email: row.email,
+                defaultPassword: !row.password ? 'teacher123' : undefined
+              };
             } catch (err) {
               console.error(`Error processing teacher ${row.email}:`, err);
               return { success: false, email: row.email, error: err.message };
@@ -730,9 +953,15 @@ export const uploadData = async (req, res) => {
           const successCount = teacherResults.filter(r => r.success).length;
           const failureCount = teacherResults.filter(r => !r.success).length;
           
+          // Get list of teachers with default passwords
+          const teachersWithDefaultPasswords = teacherResults
+            .filter(r => r.success && r.defaultPassword)
+            .map(r => ({ email: r.email, password: r.defaultPassword }));
+          
           return res.status(200).json({
             message: `Successfully processed ${successCount} teachers, ${failureCount} failed`,
-            details: teacherResults
+            details: teacherResults,
+            defaultPasswords: teachersWithDefaultPasswords.length > 0 ? teachersWithDefaultPasswords : undefined
           });
         } else {
           return res.status(400).json({ message: 'Invalid upload type' });

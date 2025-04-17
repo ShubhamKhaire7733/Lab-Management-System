@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getCurrentUser, getToken } from '../lib/auth';
-import { getAllTeachers } from '../services/teacherService';
+import { getCurrentTeacher } from '../services/teacherService';
 
 const AuthTest = () => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [teachers, setTeachers] = useState([]);
+  const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -19,15 +19,15 @@ const AuthTest = () => {
     setToken(authToken);
   }, []);
 
-  const testTeachersAPI = async () => {
+  const testTeacherAPI = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getAllTeachers();
-      setTeachers(data);
+      const data = await getCurrentTeacher();
+      setTeacher(data);
     } catch (err) {
-      console.error('Error fetching teachers:', err);
-      setError(err.message || 'Failed to fetch teachers');
+      console.error('Error fetching teacher profile:', err);
+      setError(err.message || 'Failed to fetch teacher profile');
     } finally {
       setLoading(false);
     }
@@ -65,11 +65,11 @@ const AuthTest = () => {
       <div className="bg-white p-4 rounded shadow mb-4">
         <h2 className="text-xl font-semibold mb-2">API Test</h2>
         <button 
-          onClick={testTeachersAPI}
+          onClick={testTeacherAPI}
           disabled={loading}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
         >
-          {loading ? 'Loading...' : 'Test Teachers API'}
+          {loading ? 'Loading...' : 'Test Teacher API'}
         </button>
         
         {error && (
@@ -78,14 +78,12 @@ const AuthTest = () => {
           </div>
         )}
         
-        {teachers.length > 0 && (
+        {teacher && (
           <div className="mt-4">
-            <h3 className="font-semibold mb-2">Teachers ({teachers.length})</h3>
-            <ul className="list-disc pl-5">
-              {teachers.map(teacher => (
-                <li key={teacher.id}>{teacher.name} ({teacher.email})</li>
-              ))}
-            </ul>
+            <h3 className="font-semibold mb-2">Teacher Profile</h3>
+            <pre className="bg-gray-100 p-2 rounded overflow-auto">
+              {JSON.stringify(teacher, null, 2)}
+            </pre>
           </div>
         )}
       </div>

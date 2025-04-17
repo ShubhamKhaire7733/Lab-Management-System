@@ -21,6 +21,27 @@ const Batch = sequelize.define('Batch', {
     type: DataTypes.ENUM('9', '10', '11'),
     allowNull: false
   },
+  rollNumberStart: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      min: 23101,
+      max: 23150
+    }
+  },
+  rollNumberEnd: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      min: 23101,
+      max: 23150,
+      isGreaterThanStart(value) {
+        if (parseInt(value) <= parseInt(this.rollNumberStart)) {
+          throw new Error('End roll number must be greater than start roll number');
+        }
+      }
+    }
+  },
   day: {
     type: DataTypes.ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'),
     allowNull: false

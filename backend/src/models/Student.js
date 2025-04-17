@@ -19,7 +19,6 @@ const Student = sequelize.define('Student', {
   rollNumber: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
     validate: {
       len: [1, 20]
     }
@@ -34,7 +33,6 @@ const Student = sequelize.define('Student', {
   email: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
     validate: {
       isEmail: true
     }

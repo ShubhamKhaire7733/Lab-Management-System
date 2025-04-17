@@ -1,5 +1,14 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getToken } from '../../lib/auth';
+import { 
+  getTeacherAllocations, 
+  createTeacherAllocation, 
+  updateTeacherAllocation, 
+  deleteTeacherAllocation 
+} from '../../services/adminService';
+import { getTeachers } from '../../services/adminService';
+import { getSubjects } from '../../services/subjectService';
+import { getBatches } from '../../services/batchService';
 
 function TeacherAllocation() {
   const [allocations, setAllocations] = useState([]);
@@ -17,6 +26,7 @@ function TeacherAllocation() {
     division: '',
     academicYear: new Date().getFullYear().toString()
   });
+  const [success, setSuccess] = useState(null);
 
   useEffect(() => {
     fetchAllocations();
@@ -28,23 +38,12 @@ function TeacherAllocation() {
   const fetchAllocations = async () => {
     try {
       setLoading(true);
-      const token = getToken();
-      
-      const response = await fetch('http://localhost:3000/api/admin/allocations', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch teacher allocations');
-      }
-      
-      const data = await response.json();
+      const data = await getTeacherAllocations();
       setAllocations(data);
+      setError(null);
     } catch (err) {
-      setError(err.message);
-      console.error('Error fetching teacher allocations:', err);
+      setError('Failed to fetch teacher allocations');
+      console.error('Error fetching allocations:', err);
     } finally {
       setLoading(false);
     }
@@ -52,40 +51,24 @@ function TeacherAllocation() {
 
   const fetchTeachers = async () => {
     try {
-      const token = getToken();
+      console.log('Fetching teachers...');
+      const data = await getTeachers();
+      console.log('Teachers fetched:', data);
       
-      const response = await fetch('http://localhost:3000/api/admin/teachers', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch teachers');
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid response format: expected an array of teachers');
       }
       
-      const data = await response.json();
       setTeachers(data);
     } catch (err) {
       console.error('Error fetching teachers:', err);
+      setError('Failed to fetch teachers: ' + err.message);
     }
   };
 
   const fetchSubjects = async () => {
     try {
-      const token = getToken();
-      
-      const response = await fetch('http://localhost:3000/api/admin/subjects', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch subjects');
-      }
-      
-      const data = await response.json();
+      const data = await getSubjects();
       setSubjects(data);
     } catch (err) {
       console.error('Error fetching subjects:', err);
@@ -94,19 +77,7 @@ function TeacherAllocation() {
 
   const fetchBatches = async () => {
     try {
-      const token = getToken();
-      
-      const response = await fetch('http://localhost:3000/api/admin/batches', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch batches');
-      }
-      
-      const data = await response.json();
+      const data = await getBatches();
       setBatches(data);
     } catch (err) {
       console.error('Error fetching batches:', err);
@@ -123,42 +94,22 @@ function TeacherAllocation() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     try {
-      const token = getToken();
-      const url = editingAllocation 
-        ? `http://localhost:3000/api/admin/allocations/${editingAllocation.id}`
-        : 'http://localhost:3000/api/admin/allocations';
-      
-      const method = editingAllocation ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to ${editingAllocation ? 'update' : 'create'} teacher allocation`);
+      setLoading(true);
+      if (editingAllocation) {
+        await updateTeacherAllocation(editingAllocation.id, formData);
+        setSuccess('Teacher allocation updated successfully');
+      } else {
+        await createTeacherAllocation(formData);
+        setSuccess('Teacher allocation created successfully');
       }
-      
-      // Reset form and refresh allocations
-      setFormData({
-        teacherId: '',
-        subjectId: '',
-        batchId: '',
-        division: '',
-        academicYear: new Date().getFullYear().toString()
-      });
-      setShowForm(false);
-      setEditingAllocation(null);
       fetchAllocations();
+      resetForm();
     } catch (err) {
-      setError(err.message);
-      console.error(`Error ${editingAllocation ? 'updating' : 'creating'} teacher allocation:`, err);
+      setError(err.message || 'Failed to save teacher allocation');
+      console.error('Error saving allocation:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -175,34 +126,36 @@ function TeacherAllocation() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this teacher allocation?')) {
-      return;
-    }
-    
-    try {
-      const token = getToken();
-      
-      const response = await fetch(`http://localhost:3000/api/admin/allocations/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete teacher allocation');
+    if (window.confirm('Are you sure you want to delete this allocation?')) {
+      try {
+        setLoading(true);
+        await deleteTeacherAllocation(id);
+        setSuccess('Teacher allocation deleted successfully');
+        fetchAllocations();
+      } catch (err) {
+        setError(err.message || 'Failed to delete teacher allocation');
+        console.error('Error deleting allocation:', err);
+      } finally {
+        setLoading(false);
       }
-      
-      fetchAllocations();
-    } catch (err) {
-      setError(err.message);
-      console.error('Error deleting teacher allocation:', err);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      teacherId: '',
+      subjectId: '',
+      batchId: '',
+      division: '',
+      academicYear: new Date().getFullYear().toString()
+    });
+    setShowForm(false);
+    setEditingAllocation(null);
   };
 
   const getTeacherName = (teacherId) => {
     const teacher = teachers.find(t => t.id === teacherId);
-    return teacher ? teacher.User?.name || 'Unknown Teacher' : 'Unknown Teacher';
+    return teacher ? teacher.name : 'Unknown Teacher';
   };
 
   const getSubjectName = (subjectId) => {
@@ -265,7 +218,7 @@ function TeacherAllocation() {
                   <option value="">Select a teacher</option>
                   {teachers.map(teacher => (
                     <option key={teacher.id} value={teacher.id}>
-                      {teacher.User?.name || 'Unknown Teacher'}
+                      {teacher.name} ({teacher.department})
                     </option>
                   ))}
                 </select>

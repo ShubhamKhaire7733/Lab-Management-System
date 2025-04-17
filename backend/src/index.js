@@ -41,8 +41,11 @@ const PORT = config.server.port || 3000;
 
 const startServer = async () => {
   try {
-    // Sync database with alter option to preserve data
-    await sequelize.sync({ alter: true });
+    // Sync database without altering tables
+    await sequelize.sync({ 
+      alter: false, // Don't automatically alter tables
+      force: false  // Don't drop and recreate tables
+    });
     console.log('Database synced successfully');
 
     // Start server
