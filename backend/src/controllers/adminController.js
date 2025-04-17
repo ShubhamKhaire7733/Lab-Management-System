@@ -1,4 +1,4 @@
-import { Batch, Student, Teacher, User, Attendance, Subject, TeacherSubjectBatch } from '../models/index.js';
+import { Batch, Student, Teacher, User, Attendance, Subject, TeacherSubjectBatch, Assignment } from '../models/index.js';
 import { Op } from 'sequelize';
 import excel from 'exceljs';
 import { Parser } from 'json2csv';
@@ -23,13 +23,24 @@ export const getAllStudentsWithMarks = async (req, res) => {
 // Get dashboard statistics
 export const getDashboardStats = async (req, res) => {
   try {
+    // Get basic counts
+    const [studentCount, teacherCount, batchCount] = await Promise.all([
+      Student.count(),
+      Teacher.count(),
+      Batch.count()
+    ]);
+
     const stats = {
-      totalStudents: await Student.count(),
-      totalTeachers: await Teacher.count(),
-      totalBatches: await Batch.count()
+      counts: {
+        students: studentCount,
+        teachers: teacherCount,
+        batches: batchCount
+      }
     };
+
     res.json(stats);
   } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -973,6 +984,216 @@ export const uploadData = async (req, res) => {
   }
 };
 
+// User Management
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({
+      include: [
+        {
+          model: Student,
+          as: 'student',
+          attributes: ['id', 'rollNumber', 'name', 'year', 'division']
+        },
+        {
+          model: Teacher,
+          as: 'teacher',
+          attributes: ['id', 'name', 'department']
+        }
+      ],
+      order: [['email', 'ASC']]
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Users fetched successfully',
+      data: users
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch users',
+      error: error.message
+    });
+  }
+};
+
+export const createUser = async (req, res) => {
+  try {
+    const { email, password, role, name, rollNumber, year, division, department } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !role) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, password, and role are required'
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Create user
+    const user = await User.create({
+      email,
+      password, // Password will be hashed by the User model
+      role
+    });
+
+    // Create role-specific profile
+    if (role === 'student' && rollNumber && year && division) {
+      await Student.create({
+        userId: user.id,
+        rollNumber,
+        name: name || email.split('@')[0],
+        email,
+        year,
+        division
+      });
+    } else if (role === 'teacher' && name && department) {
+      await Teacher.create({
+        userId: user.id,
+        name,
+        email,
+        department
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      data: { id: user.id, email: user.email, role: user.role }
+    });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create user',
+      error: error.message
+    });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email, password, role, name, rollNumber, year, division, department, isActive } = req.body;
+
+    // Find user
+    const user = await User.findByPk(id, {
+      include: [
+        {
+          model: Student,
+          as: 'student'
+        },
+        {
+          model: Teacher,
+          as: 'teacher'
+        }
+      ]
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Update user
+    if (email) user.email = email;
+    if (password) user.password = password; // Password will be hashed by the User model
+    if (role) user.role = role;
+    if (isActive !== undefined) user.isActive = isActive;
+
+    await user.save();
+
+    // Update role-specific profile
+    if (user.role === 'student' && user.student) {
+      if (name) user.student.name = name;
+      if (rollNumber) user.student.rollNumber = rollNumber;
+      if (year) user.student.year = year;
+      if (division) user.student.division = division;
+      await user.student.save();
+    } else if (user.role === 'teacher' && user.teacher) {
+      if (name) user.teacher.name = name;
+      if (department) user.teacher.department = department;
+      await user.teacher.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      data: { id: user.id, email: user.email, role: user.role }
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update user',
+      error: error.message
+    });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find user
+    const user = await User.findByPk(id, {
+      include: [
+        {
+          model: Student,
+          as: 'student'
+        },
+        {
+          model: Teacher,
+          as: 'teacher'
+        }
+      ]
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Delete role-specific profile
+    if (user.role === 'student' && user.student) {
+      await user.student.destroy();
+    } else if (user.role === 'teacher' && user.teacher) {
+      await user.teacher.destroy();
+    }
+
+    // Delete user
+    await user.destroy();
+
+    res.status(200).json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete user',
+      error: error.message
+    });
+  }
+};
+
 export default {
   getAllStudentsWithMarks,
   getDashboardStats,
@@ -998,5 +1219,9 @@ export default {
   deleteTeacher,
   getTeachers,
   getTeacherById,
-  uploadData
+  uploadData,
+  getAllUsers,
+  createUser,
+  updateUser,
+  deleteUser
 }; 

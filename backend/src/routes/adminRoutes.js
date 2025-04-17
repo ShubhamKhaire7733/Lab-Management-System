@@ -24,9 +24,14 @@ import {
   deleteTeacher,
   getTeachers,
   getTeacherById,
-  uploadData
+  uploadData,
+  createUser,
+  updateUser,
+  deleteUser,
+  getAllUsers
 } from '../controllers/adminController.js';
 import { authenticateToken, authorizeAdmin } from '../middleware/auth.js';
+import { checkAdminPermissions } from '../middleware/checkAdminPermissions.js';
 import multer from 'multer';
 import path from 'path';
 
@@ -44,11 +49,11 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Apply authentication and admin authorization to all routes
-router.use(authenticateToken, authorizeAdmin);
+// Apply authentication and admin authorization middleware to all routes
+router.use(authenticateToken, authorizeAdmin, checkAdminPermissions);
 
 // Dashboard
-router.get('/dashboard/stats', getDashboardStats);
+router.get('/dashboard', getDashboardStats);
 router.get('/students/marks', getAllStudentsWithMarks);
 
 // CSV Upload Routes
@@ -87,5 +92,11 @@ router.get('/attendance/export', exportAttendanceData);
 
 // Data Export
 router.get('/export/batch', exportBatchData);
+
+// User management routes
+router.get('/users', getAllUsers);
+router.post('/users', createUser);
+router.put('/users/:id', updateUser);
+router.delete('/users/:id', deleteUser);
 
 export default router; 

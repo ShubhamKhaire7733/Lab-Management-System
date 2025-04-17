@@ -48,10 +48,10 @@ export const createBatch = async (req, res) => {
     }
 
     // Validate roll number range
-    if (rollNumberStart < 23101 || rollNumberStart > 23150 || rollNumberEnd < 23101 || rollNumberEnd > 23150) {
+    if (rollNumberStart < 23101 || rollNumberStart > 45000 || rollNumberEnd < 23101 || rollNumberEnd > 45000) {
       return res.status(400).json({
         success: false,
-        message: 'Roll numbers must be between 23101 and 23150'
+        message: 'Roll numbers must be between 23101 and 45000'
       });
     }
 
@@ -174,17 +174,17 @@ export const updateBatch = async (req, res) => {
     }
 
     // Validate roll number range if provided
-    if (rollNumberStart !== undefined && (rollNumberStart < 23101 || rollNumberStart > 23150)) {
+    if (rollNumberStart !== undefined && (rollNumberStart < 23101 || rollNumberStart > 45000)) {
       return res.status(400).json({
         success: false,
-        message: 'Start roll number must be between 23101 and 23150'
+        message: 'Start roll number must be between 23101 and 45000'
       });
     }
 
-    if (rollNumberEnd !== undefined && (rollNumberEnd < 23101 || rollNumberEnd > 23150)) {
+    if (rollNumberEnd !== undefined && (rollNumberEnd < 23101 || rollNumberEnd > 45000)) {
       return res.status(400).json({
         success: false,
-        message: 'End roll number must be between 23101 and 23150'
+        message: 'End roll number must be between 23101 and 45000'
       });
     }
 

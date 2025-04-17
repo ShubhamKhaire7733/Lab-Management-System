@@ -1,8 +1,10 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import Teacher from '../models/Teacher.js';
+import Student from '../models/Student.js';
+import Role from '../models/Role.js';
 
-const register = async (req, res) => {
+export const register = async (req, res) => {
   try {
     const { email, password, role, department, phone, subjects } = req.body;
     
@@ -98,75 +100,132 @@ const register = async (req, res) => {
   }
 };
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
-    
-    console.log('Login attempt for:', email, 'with role:', role);
+    const { email, password } = req.body;
 
-    // Validate input data
-    if (!email || !password || !role) {
-      return res.status(400).json({ message: 'Email, password, and role are required' });
-    }
-
-    const user = await User.findOne({ 
-      where: { email },
-      include: role === 'teacher' ? [{
-        model: Teacher,
-        as: 'teacher' // Use the correct alias defined in associations
-      }] : []
-    });
-
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Verify if the provided role matches the user's role
-    if (user.role !== role) {
-      return res.status(401).json({ 
-        message: `Invalid role. This account is registered as a ${user.role}.` 
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required'
       });
     }
 
-    // Generate JWT token
+    // Find user by email with student profile
+    const user = await User.findOne({
+      where: { email },
+      include: [
+        {
+          model: Student,
+          as: 'student',
+          attributes: ['id', 'rollNumber', 'name', 'year', 'division', 'department']
+        },
+        {
+          model: Teacher,
+          as: 'teacher',
+          attributes: ['id', 'name', 'department']
+        }
+      ]
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Check password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Get role permissions
+    let permissions = {};
+    try {
+      const role = await Role.findOne({
+        where: { role_name: user.role.toLowerCase() }
+      });
+      
+      if (role && role.permissions) {
+        permissions = typeof role.permissions === 'string' 
+          ? JSON.parse(role.permissions) 
+          : role.permissions;
+      }
+    } catch (error) {
+      console.warn('Could not fetch role permissions:', error.message);
+    }
+
+    // Prepare token payload
+    const tokenPayload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      permissions
+    };
+
+    // Add role-specific data to token
+    if (user.role === 'student' && user.student) {
+      tokenPayload.studentId = user.student.id;
+      tokenPayload.rollNumber = user.student.rollNumber;
+      tokenPayload.name = user.student.name;
+      tokenPayload.year = user.student.year;
+      tokenPayload.division = user.student.division;
+      tokenPayload.department = user.student.department;
+    } else if (user.role === 'teacher' && user.teacher) {
+      tokenPayload.teacherId = user.teacher.id;
+      tokenPayload.name = user.teacher.name;
+      tokenPayload.department = user.teacher.department;
+    }
+
+    // Generate token
     const token = jwt.sign(
-      { 
-        id: user.id, 
-        email: user.email, 
-        role: user.role,
-        ...(role === 'teacher' && user.teacher ? {
-          teacherId: user.teacher.id,
-          department: user.teacher.department
-        } : {})
-      },
+      tokenPayload,
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
     );
 
-    res.json({ 
-      token,
-      user: {
+    // Return user data and token
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
         id: user.id,
         email: user.email,
         role: user.role,
-        ...(role === 'teacher' && user.teacher ? {
-          teacherId: user.teacher.id,
+        name: tokenPayload.name,
+        student: user.role === 'student' ? {
+          id: user.student.id,
+          rollNumber: user.student.rollNumber,
+          name: user.student.name,
+          year: user.student.year,
+          division: user.student.division,
+          department: user.student.department
+        } : null,
+        teacher: user.role === 'teacher' ? {
+          id: user.teacher.id,
+          name: user.teacher.name,
           department: user.teacher.department
-        } : {})
+        } : null,
+        token
       }
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Error during login', error: error.message });
+    res.status(500).json({
+      success: false,
+      message: 'Error during login',
+      error: error.message
+    });
   }
 };
 
-const changePassword = async (req, res) => {
+export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user.id; // This will come from the auth middleware
@@ -204,8 +263,34 @@ const changePassword = async (req, res) => {
   }
 };
 
-export default {
-  register,
-  login,
-  changePassword
-};
+export const verifyToken = async (req, res) => {
+  try {
+    // The user object is already attached to req by the authenticateToken middleware
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Token is valid',
+      data: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        name: user.name
+      }
+    });
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error verifying token',
+      error: error.message
+    });
+  }
+}; 

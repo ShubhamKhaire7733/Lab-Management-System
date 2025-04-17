@@ -33,24 +33,7 @@ const sequelize = new Sequelize(
       // Additional MySQL specific options
       supportBigNumbers: true,
       bigNumberStrings: true,
-      dateStrings: true,
-      // Retry configuration
-      retry: {
-        max: 5, // Maximum number of connection retries
-        match: [ // Retry on these errors
-          /ETIMEDOUT/,
-          /ECONNRESET/,
-          /ECONNREFUSED/,
-          /SequelizeConnectionError/,
-          /SequelizeConnectionRefusedError/,
-          /SequelizeHostNotFoundError/,
-          /SequelizeHostNotReachableError/,
-          /SequelizeInvalidConnectionError/,
-          /SequelizeConnectionTimedOutError/
-        ],
-        backoffBase: 1000, // Initial backoff duration in ms
-        backoffExponent: 1.5, // Exponential backoff factor
-      }
+      dateStrings: true
     }
   }
 );

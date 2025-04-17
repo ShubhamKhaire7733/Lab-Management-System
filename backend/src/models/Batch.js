@@ -26,7 +26,7 @@ const Batch = sequelize.define('Batch', {
     allowNull: false,
     validate: {
       min: 23101,
-      max: 23150
+      max: 45000
     }
   },
   rollNumberEnd: {
@@ -34,7 +34,7 @@ const Batch = sequelize.define('Batch', {
     allowNull: false,
     validate: {
       min: 23101,
-      max: 23150,
+      max: 45000,
       isGreaterThanStart(value) {
         if (parseInt(value) <= parseInt(this.rollNumberStart)) {
           throw new Error('End roll number must be greater than start roll number');

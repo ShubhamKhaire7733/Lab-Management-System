@@ -29,7 +29,7 @@ function AdminDashboard() {
         setStudents(studentsData);
         
         // Fetch dashboard stats
-        const statsResponse = await fetch('http://localhost:3000/api/admin/stats', {
+        const statsResponse = await fetch('http://localhost:3000/api/admin/dashboard', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

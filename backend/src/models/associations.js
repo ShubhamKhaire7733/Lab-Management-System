@@ -9,6 +9,7 @@ import Batch from './Batch.js';
 import Subject from './Subject.js';
 import TeacherSubjectBatch from './TeacherSubjectBatch.js';
 import Attendance from './Attendance.js';
+import Performance from './Performance.js';
 
 // Define associations
 const setupAssociations = () => {
@@ -34,16 +35,34 @@ const setupAssociations = () => {
     as: 'assignments'
   });
 
+  // Assessment associations
   Student.hasMany(Assessment, {
     foreignKey: 'studentRollNo',
     sourceKey: 'rollNumber',
     as: 'assessments'
   });
 
+  Assessment.belongsTo(Student, {
+    foreignKey: 'studentRollNo',
+    targetKey: 'rollNumber',
+    as: 'student'
+  });
+
+  Student.hasMany(Performance, {
+    foreignKey: 'studentId',
+    as: 'performances'
+  });
+
   Student.belongsToMany(Batch, {
     through: 'StudentBatches',
     foreignKey: 'studentId',
     otherKey: 'batchId'
+  });
+
+  // Add Student-Attendance association
+  Student.hasMany(Attendance, {
+    foreignKey: 'studentId',
+    as: 'attendances'
   });
 
   // Teacher associations
@@ -102,26 +121,19 @@ const setupAssociations = () => {
     as: 'assignedTeacher'
   });
 
-  TeacherSubjectBatch.belongsTo(Batch, {
-    foreignKey: 'batchId',
-    as: 'assignedBatch'
-  });
-
   TeacherSubjectBatch.belongsTo(Subject, {
     foreignKey: 'subjectId',
     as: 'assignedSubject'
   });
 
+  TeacherSubjectBatch.belongsTo(Batch, {
+    foreignKey: 'batchId',
+    as: 'assignedBatch'
+  });
+
   // Assignment associations
   Assignment.belongsTo(Student, {
     foreignKey: 'studentId',
-    as: 'student'
-  });
-
-  // Assessment associations
-  Assessment.belongsTo(Student, {
-    foreignKey: 'studentRollNo',
-    targetKey: 'rollNumber',
     as: 'student'
   });
 
@@ -134,6 +146,12 @@ const setupAssociations = () => {
   Attendance.belongsTo(Batch, {
     foreignKey: 'batchId',
     as: 'batch'
+  });
+
+  // Performance associations
+  Performance.belongsTo(Student, {
+    foreignKey: 'studentId',
+    as: 'student'
   });
 
   console.log('Model associations set up successfully');
@@ -150,5 +168,6 @@ export {
   Batch, 
   Subject, 
   TeacherSubjectBatch,
-  Attendance 
+  Attendance,
+  Performance
 }; 

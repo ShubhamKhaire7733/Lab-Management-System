@@ -45,6 +45,11 @@ const Student = sequelize.define('Student', {
     type: DataTypes.ENUM('9', '10', '11'),
     allowNull: false
   },
+  department: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'Computer Engineering'
+  },
   attendanceMarks: {
     type: DataTypes.INTEGER,
     allowNull: true,

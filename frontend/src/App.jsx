@@ -8,7 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Home from './pages/Home';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
-import StudentDashboard from './pages/dashboard/StudentDashboard';
+import StudentDashboard from './components/student/StudentDashboard';
 import TeacherDashboard from './pages/dashboard/TeacherDashboard';
 import AdminPanel from './pages/AdminPanel';
 import BatchAttendance from './pages/dashboard/BatchAttendance';
@@ -50,6 +50,7 @@ function App() {
                   <StudentDashboard />
                 </PrivateRoute>
               } />
+              <Route path="/student/dashboard" element={<StudentDashboard />} />
               <Route path="/teacher" element={
                 <PrivateRoute allowedRoles={['teacher']}>
                   <TeacherDashboard />

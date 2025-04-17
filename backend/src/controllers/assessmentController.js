@@ -1,17 +1,8 @@
-import Assessment from '../models/Assessment.js';
-import Student from '../models/Student.js';
+import { Student, Assessment, Batch, TeacherSubjectBatch } from '../models/index.js';
 import { Op } from 'sequelize';
-import sequelize from '../config/database.js';
-
-// Helper function to find the appropriate student model based on roll number
-// This is a simplified version that just returns the Student model
-const getStudentModel = (rollNo) => {
-  // For now, we'll just use the main Student model
-  return Student;
-};
 
 // Save or update assessment data
-const saveAssessment = async (req, res) => {
+export const saveAssessment = async (req, res) => {
   try {
     console.log('Received request body:', req.body);
     
@@ -41,7 +32,6 @@ const saveAssessment = async (req, res) => {
 
     // Validate required fields
     if (!studentRollNo || studentRollNo.trim() === '') {
-      console.error('Missing studentRollNo in request');
       return res.status(400).json({
         success: false,
         message: 'Student roll number is required'
@@ -49,10 +39,66 @@ const saveAssessment = async (req, res) => {
     }
 
     if (experimentNo === undefined || experimentNo === null) {
-      console.error('Missing experimentNo in request');
       return res.status(400).json({
         success: false,
         message: 'Experiment number is required'
+      });
+    }
+
+    // First check if the student exists
+    const student = await Student.findOne({
+      where: { rollNumber: studentRollNo },
+      include: [{
+        model: Batch,
+        through: 'StudentBatches'
+      }]
+    });
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: 'Student not found with the provided roll number'
+      });
+    }
+
+    console.log('Found student:', student.toJSON());
+    console.log('Teacher ID from request:', req.user.teacherId);
+    console.log('Student batches:', student.Batches ? student.Batches.map(b => b.toJSON()) : []);
+
+    // Then check if the student is in any batches that this teacher can access
+    const teacherBatches = await TeacherSubjectBatch.findAll({
+      where: { 
+        teacherId: req.user.teacherId,
+        isActive: true
+      },
+      include: [{
+        model: Batch,
+        as: 'assignedBatch',
+        required: true
+      }]
+    });
+
+    console.log('Teacher batches found:', teacherBatches.length);
+    if (teacherBatches.length > 0) {
+      console.log('Teacher batches:', teacherBatches.map(tsb => ({
+        batchId: tsb.batchId,
+        batchName: tsb.assignedBatch ? tsb.assignedBatch.name : 'unknown',
+        studentRollNo
+      })));
+    }
+
+    // Check if any of the teacher's batches contain this student
+    const hasPermission = teacherBatches.some(tsb => {
+      const batch = tsb.assignedBatch;
+      return batch && 
+             studentRollNo >= batch.rollNumberStart && 
+             studentRollNo <= batch.rollNumberEnd;
+    });
+
+    if (!hasPermission) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have permission to modify assessments for this student'
       });
     }
 
@@ -70,27 +116,28 @@ const saveAssessment = async (req, res) => {
       }
       
       // Update fields
-      assessment.studentRollNo = studentRollNo;
-      assessment.experimentNo = experimentNo;
-      assessment.scheduledPerformanceDate = scheduledPerformanceDate;
-      assessment.actualPerformanceDate = actualPerformanceDate;
-      assessment.scheduledSubmissionDate = scheduledSubmissionDate;
-      assessment.actualSubmissionDate = actualSubmissionDate;
-      assessment.rppMarks = rppMarks;
-      assessment.spoMarks = spoMarks;
-      assessment.assignmentMarks = assignmentMarks;
+      const updateData = {
+        experimentNo,
+        scheduledPerformanceDate,
+        actualPerformanceDate,
+        scheduledSubmissionDate,
+        actualSubmissionDate,
+        rppMarks,
+        spoMarks,
+        assignmentMarks
+      };
       
-      if (finalAssignmentMarks) assessment.finalAssignmentMarks = finalAssignmentMarks;
-      if (testMarks) assessment.testMarks = testMarks;
-      if (theoryAttendanceMarks) assessment.theoryAttendanceMarks = theoryAttendanceMarks;
-      if (finalMarks) assessment.finalMarks = finalMarks;
-      if (unitTest1Marks) assessment.unitTest1Marks = unitTest1Marks;
-      if (unitTest2Marks) assessment.unitTest2Marks = unitTest2Marks;
-      if (unitTest3Marks) assessment.unitTest3Marks = unitTest3Marks;
-      if (convertedUnitTestMarks) assessment.convertedUnitTestMarks = convertedUnitTestMarks;
+      if (finalAssignmentMarks !== undefined) updateData.finalAssignmentMarks = finalAssignmentMarks;
+      if (testMarks !== undefined) updateData.testMarks = testMarks;
+      if (theoryAttendanceMarks !== undefined) updateData.theoryAttendanceMarks = theoryAttendanceMarks;
+      if (finalMarks !== undefined) updateData.finalMarks = finalMarks;
+      if (unitTest1Marks !== undefined) updateData.unitTest1Marks = unitTest1Marks;
+      if (unitTest2Marks !== undefined) updateData.unitTest2Marks = unitTest2Marks;
+      if (unitTest3Marks !== undefined) updateData.unitTest3Marks = unitTest3Marks;
+      if (convertedUnitTestMarks !== undefined) updateData.convertedUnitTestMarks = convertedUnitTestMarks;
       
       try {
-        await assessment.save();
+        await assessment.update(updateData);
         console.log('Assessment updated:', assessment.toJSON());
       } catch (saveError) {
         console.error('Error saving assessment:', saveError);
@@ -118,7 +165,7 @@ const saveAssessment = async (req, res) => {
           unitTest3Marks,
           convertedUnitTestMarks
         });
-        console.log('New assessment created:', assessment.toJSON());
+        console.log('Assessment created:', assessment.toJSON());
       } catch (createError) {
         console.error('Error creating assessment:', createError);
         throw createError;
@@ -156,28 +203,20 @@ const saveAssessment = async (req, res) => {
 };
 
 // Get all assessments for a student
-const getStudentAssessments = async (req, res) => {
+export const getStudentAssessments = async (req, res) => {
   try {
     const { studentRollNo } = req.params;
+    
     console.log('Fetching assessments for student:', studentRollNo);
     
-    const assessments = await Assessment.findAll({ 
+    const assessments = await Assessment.findAll({
       where: { studentRollNo },
       order: [['experimentNo', 'ASC']]
     });
-
-    console.log(`Found ${assessments.length} assessments for student ${studentRollNo}`);
     
-    // Log each assessment's unit test marks
-    assessments.forEach((assessment, index) => {
-      console.log(`Assessment ${index + 1} (ID: ${assessment.id}, Experiment: ${assessment.experimentNo}):`);
-      console.log(`  Unit Test 1: ${assessment.unitTest1Marks}`);
-      console.log(`  Unit Test 2: ${assessment.unitTest2Marks}`);
-      console.log(`  Unit Test 3: ${assessment.unitTest3Marks}`);
-      console.log(`  Converted Unit Test Marks: ${assessment.convertedUnitTestMarks}`);
-    });
+    console.log('Found assessments:', assessments.length);
     
-    res.status(200).json({
+    res.json({
       success: true,
       data: assessments
     });
@@ -192,35 +231,37 @@ const getStudentAssessments = async (req, res) => {
 };
 
 // Get all assessments for a batch
-const getBatchAssessments = async (req, res) => {
+export const getBatchAssessments = async (req, res) => {
   try {
     const { batchId } = req.params;
-    console.log('Fetch request for batch assessments:', batchId);
     
-    // Since we don't have a direct way to get students by batch,
-    // we'll just return assessments filtered by a pattern in studentRollNo
-    // This assumes roll numbers contain batch identifiers
+    // Get the batch to find roll number range
+    const batch = await Batch.findByPk(batchId);
+    if (!batch) {
+      return res.status(404).json({
+        success: false,
+        message: 'Batch not found'
+      });
+    }
     
+    // Get all assessments for students in this batch
     const assessments = await Assessment.findAll({
-      where: {
-        // You might need to adjust this logic based on your roll number format
-        // This is just a placeholder example
-        studentRollNo: {
-          [Op.like]: `%${batchId}%`
-        }
-      },
+      include: [{
+        model: Student,
+        where: {
+          rollNumber: {
+            [Op.between]: [batch.rollNumberStart, batch.rollNumberEnd]
+          }
+        },
+        required: true
+      }],
       order: [
-        ['studentRollNo', 'ASC'], 
+        ['studentRollNo', 'ASC'],
         ['experimentNo', 'ASC']
       ]
     });
-
-    console.log(`Found ${assessments.length} assessments for batch ${batchId}`);
     
-    res.status(200).json({
-      success: true,
-      data: assessments
-    });
+    res.json(assessments);
   } catch (error) {
     console.error('Error fetching batch assessments:', error);
     res.status(500).json({
@@ -229,6 +270,4 @@ const getBatchAssessments = async (req, res) => {
       error: error.message
     });
   }
-};
-
-export { saveAssessment, getStudentAssessments, getBatchAssessments }; 
+}; 

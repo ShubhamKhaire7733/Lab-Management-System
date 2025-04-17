@@ -283,8 +283,8 @@ const BatchManagement = () => {
                   onChange={handleInputChange}
                   required
                   min="23101"
-                  max="23150"
-                  placeholder="Start (23101-23150)"
+                  max="45000"
+                  placeholder="Start (23101-45000)"
                   className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
                 <input
@@ -294,8 +294,8 @@ const BatchManagement = () => {
                   onChange={handleInputChange}
                   required
                   min="23101"
-                  max="23150"
-                  placeholder="End (23101-23150)"
+                  max="45000"
+                  placeholder="End (23101-45000)"
                   className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>

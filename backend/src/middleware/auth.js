@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 export const authenticateToken = async (req, res, next) => {
   try {
     console.log('Auth middleware: Checking authorization header');
+    console.log('Auth middleware: Headers:', req.headers);
+    
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
@@ -10,13 +12,20 @@ export const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ message: 'No authentication token, access denied' });
     }
 
+    console.log('Auth middleware: Token found, length:', token.length);
     console.log('Auth middleware: Verifying token');
+    
     const verified = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    console.log('Auth middleware: Token verified successfully');
+    console.log('Auth middleware: User data:', verified);
+    
     req.user = verified;
-    console.log('Auth middleware: Token verified successfully, user role:', verified.role);
+    console.log('Auth middleware: User attached to request:', req.user);
+    
     next();
   } catch (error) {
     console.error('Auth middleware: Token verification failed:', error.message);
+    console.error('Auth middleware: Error details:', error);
     res.status(401).json({ 
       message: 'Token verification failed, authorization denied',
       error: error.message

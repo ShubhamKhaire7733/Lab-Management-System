@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
+import Student from './Student.js';
 
 // Model matching the exact column names in your database
 const Assessment = sequelize.define('Assessment', {
@@ -10,7 +11,11 @@ const Assessment = sequelize.define('Assessment', {
   },
   studentRollNo: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    references: {
+      model: Student,
+      key: 'rollNumber'
+    }
   },
   experimentNo: {
     type: DataTypes.INTEGER,

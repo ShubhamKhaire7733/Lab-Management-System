@@ -7,6 +7,7 @@ import Batch from './Batch.js';
 import Subject from './Subject.js';
 import TeacherSubjectBatch from './TeacherSubjectBatch.js';
 import Attendance from './Attendance.js';
+import Performance from './Performance.js';
 
 export {
   User,
@@ -17,5 +18,6 @@ export {
   Batch,
   Subject,
   TeacherSubjectBatch,
-  Attendance
+  Attendance,
+  Performance
 }; 

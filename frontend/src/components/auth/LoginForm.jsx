@@ -32,11 +32,11 @@ function LoginForm() {
       }
 
       // Verify if the returned user role matches the selected role
-      if (data.user.role !== role) {
-        throw new Error(`Invalid role. Please select ${data.user.role} role.`);
+      if (data.data.role !== role) {
+        throw new Error(`Invalid role. Please select ${data.data.role} role.`);
       }
 
-      setToken(data.token);
+      setToken(data.data.token);
       toast.success('Login successful!');
       navigate(`/${role}`);
     } catch (error) {

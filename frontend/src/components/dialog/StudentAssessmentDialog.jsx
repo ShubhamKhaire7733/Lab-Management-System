@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { saveAssessment, getStudentAssessments } from '../../services/assessmentService';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 function StudentAssessmentDialog({ isOpen, onClose, student }) {
   const [experiments, setExperiments] = useState(
