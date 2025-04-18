@@ -23,24 +23,26 @@ studentApi.interceptors.request.use((config) => {
 // Get current student profile
 export const getCurrentStudent = async () => {
   try {
+    console.log("Making API request to /students/dashboard");
     const response = await studentApi.get('/students/dashboard');
+    console.log("API response:", response.data);
 
-    if (response.data.success) {
-      return response.data.data;
-    } else {
-      throw new Error(response.data.message || 'Failed to fetch student data');
-    }
+    // The response is already in the correct format, no need to check for success
+    return response.data;
   } catch (error) {
     console.error('Error fetching student data:', error);
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
+      console.error("Error response:", error.response.data);
       throw new Error(error.response.data.message || 'Failed to fetch student data');
     } else if (error.request) {
       // The request was made but no response was received
+      console.error("No response received:", error.request);
       throw new Error('No response from server');
     } else {
       // Something happened in setting up the request that triggered an Error
+      console.error("Request setup error:", error.message);
       throw new Error('Error setting up request');
     }
   }

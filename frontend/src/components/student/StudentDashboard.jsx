@@ -1,39 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Card } from "../ui";
+import { User, GraduationCap, Award, BookOpen, Calendar, Clock, Mail, Hash, Building2, Users, CheckCircle } from "lucide-react";
 import { getCurrentStudent } from '../../services/studentService';
-import { Card } from '../ui';
-import { toast } from 'react-toastify';
-import { 
-  UserCircle, 
-  BookOpen, 
-  Calendar, 
-  GraduationCap,
-  Building2,
-  Mail,
-  Hash,
-  Clock,
-  Award,
-  ChevronRight
-} from 'lucide-react';
+import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
+import { useNavigate } from 'react-router-dom';
 
 const StudentDashboard = () => {
-  const navigate = useNavigate();
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeCard, setActiveCard] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        setLoading(true);
-        const studentData = await getCurrentStudent();
-        setStudent(studentData);
-        setError(null);
+        console.log('Fetching student data...');
+        const response = await getCurrentStudent();
+        console.log('Response:', response);
+        
+        if (response) {
+          setStudent(response);
+          setError(null);
+        } else {
+          setError('Invalid response format');
+        }
       } catch (err) {
         console.error('Error fetching student data:', err);
-        setError(err.message);
-        toast.error(err.message);
+        setError(err.message || 'Failed to fetch student data');
       } finally {
         setLoading(false);
       }
@@ -42,179 +36,161 @@ const StudentDashboard = () => {
     fetchStudentData();
   }, []);
 
-  const handleAssessmentClick = () => {
-    navigate('/student/assessments');
-  };
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-          <p className="text-gray-600 text-lg animate-pulse">Loading student data...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center transform hover:scale-105 transition-transform duration-200">
-          <div className="text-red-500 text-6xl mb-4 animate-bounce">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/login')}
-            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-          >
-            Return to Login
-          </button>
-        </div>
+      <div className="flex items-center justify-center min-h-screen text-red-500">
+        {error}
       </div>
     );
   }
 
   if (!student) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center transform hover:scale-105 transition-transform duration-200">
-          <div className="text-gray-400 text-6xl mb-4 animate-bounce">📚</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">No Data Available</h2>
-          <p className="text-gray-600">No student data is currently available.</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        No student data available
       </div>
     );
   }
 
+  const completionPercentage = (student.summary?.completedAssessments / student.summary?.totalAssessments) * 100;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
-            Student Dashboard
-          </h1>
-          <p className="mt-2 text-gray-600">Welcome back, {student.name}</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Student Profile Section */}
-          <Card 
-            className={`col-span-1 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${activeCard === 'profile' ? 'ring-2 ring-blue-500' : ''}`}
-            onMouseEnter={() => setActiveCard('profile')}
-            onMouseLeave={() => setActiveCard(null)}
-          >
-            <div className="p-6">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="bg-gradient-to-br from-blue-100 to-blue-200 p-3 rounded-full">
-                  <UserCircle className="h-8 w-8 text-blue-600" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900">Student Profile</h2>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3 group">
-                  <Mail className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
-                  <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">{student.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3 group">
-                  <Hash className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
-                  <div>
-                    <p className="text-sm text-gray-500">Roll Number</p>
-                    <p className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">{student.rollNumber}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3 group">
-                  <Building2 className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
-                  <div>
-                    <p className="text-sm text-gray-500">Department</p>
-                    <p className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">{student.department}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3 group">
-                  <GraduationCap className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
-                  <div>
-                    <p className="text-sm text-gray-500">Year</p>
-                    <p className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">{student.year}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3 group">
-                  <BookOpen className="h-5 w-5 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
-                  <div>
-                    <p className="text-sm text-gray-500">Division</p>
-                    <p className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">{student.division}</p>
-                  </div>
-                </div>
-              </div>
+    <div className="container mx-auto p-6 max-w-7xl">
+      <h1 className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+        Student Dashboard
+      </h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Student Profile Card */}
+        <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-white to-gray-50">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="p-3 rounded-full bg-blue-100 text-blue-600 transition-transform duration-300 hover:rotate-12">
+              <User className="h-6 w-6" />
             </div>
-          </Card>
+            <h2 className="text-xl font-semibold text-gray-800">Student Profile</h2>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 group">
+              <Hash className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors duration-300" />
+              <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Roll No: {student.profile.rollNumber}</span>
+            </div>
+            <div className="flex items-center gap-3 group">
+              <User className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors duration-300" />
+              <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Name: {student.profile.name}</span>
+            </div>
+            <div className="flex items-center gap-3 group">
+              <Mail className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors duration-300" />
+              <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Email: {student.profile.email}</span>
+            </div>
+            <div className="flex items-center gap-3 group">
+              <Building2 className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors duration-300" />
+              <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Department: {student.profile.department}</span>
+            </div>
+            <div className="flex items-center gap-3 group">
+              <GraduationCap className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors duration-300" />
+              <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Year: {student.profile.year}</span>
+            </div>
+            <div className="flex items-center gap-3 group">
+              <Users className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors duration-300" />
+              <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Division: {student.profile.division}</span>
+            </div>
+            <div className="flex items-center gap-3 group">
+              <Calendar className="h-5 w-5 text-gray-400 group-hover:text-primary transition-colors duration-300" />
+              <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Attendance: {student.profile.attendanceMarks} marks</span>
+            </div>
+          </div>
+        </Card>
 
-          {/* Summary Section */}
-          <Card 
-            className={`col-span-1 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${activeCard === 'summary' ? 'ring-2 ring-purple-500' : ''}`}
-            onMouseEnter={() => setActiveCard('summary')}
-            onMouseLeave={() => setActiveCard(null)}
-          >
-            <div className="p-6">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="bg-gradient-to-br from-purple-100 to-purple-200 p-3 rounded-full">
-                  <Award className="h-8 w-8 text-purple-600" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900">Summary</h2>
+        {/* Summary Card - Now Clickable */}
+        <Card 
+          className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-gradient-to-br from-white to-purple-50 border-t-4 border-t-purple-500 cursor-pointer"
+          onClick={() => navigate('/student/assessments')}
+        >
+          <div className="p-6">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 rounded-full bg-purple-100 text-purple-600 transition-transform duration-300 hover:rotate-12">
+                <BookOpen className="h-6 w-6" />
               </div>
-              <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-800">Summary</h2>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="flex justify-between mb-2">
+                <span className="text-sm font-medium text-gray-600">Assessment Progress</span>
+                <span className="text-sm font-medium text-purple-600">{completionPercentage}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
-                  className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg transform hover:scale-105 transition-transform duration-200 cursor-pointer group"
-                  onClick={handleAssessmentClick}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500">Total Assessments</p>
-                      <p className="text-2xl font-bold text-blue-600">{student.assessments?.length || 0}</p>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-blue-400 group-hover:text-blue-600 transform group-hover:translate-x-1 transition-all" />
+                  className="bg-purple-600 h-2.5 rounded-full transition-all duration-500 ease-out" 
+                  style={{ width: `${completionPercentage}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-purple-50 group hover:bg-purple-100 transition-colors duration-300">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-full bg-purple-100 text-purple-600">
+                    <BookOpen className="h-4 w-4" />
                   </div>
+                  <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Total Assessments</span>
                 </div>
-                <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg transform hover:scale-105 transition-transform duration-200">
-                  <p className="text-sm text-gray-500">Attendance Records</p>
-                  <p className="text-2xl font-bold text-green-600">{student.attendance?.length || 0}</p>
+                <span className="font-semibold text-purple-600 group-hover:text-purple-700 transition-colors duration-300">{student.summary?.totalAssessments || 0}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-purple-50 group hover:bg-purple-100 transition-colors duration-300">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-full bg-green-100 text-green-600">
+                    <CheckCircle className="h-4 w-4" />
+                  </div>
+                  <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Completed Assessments</span>
                 </div>
+                <span className="font-semibold text-purple-600 group-hover:text-purple-700 transition-colors duration-300">{student.summary?.completedAssessments || 0}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-purple-50 group hover:bg-purple-100 transition-colors duration-300">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-full bg-blue-100 text-blue-600">
+                    <Calendar className="h-4 w-4" />
+                  </div>
+                  <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Total Attendance</span>
+                </div>
+                <span className="font-semibold text-purple-600 group-hover:text-purple-700 transition-colors duration-300">{student.summary?.totalAttendance || 0}</span>
               </div>
             </div>
-          </Card>
+          </div>
+        </Card>
 
-          {/* Unit Test Marks Section */}
-          <Card 
-            className={`col-span-1 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 ${activeCard === 'unitTests' ? 'ring-2 ring-orange-500' : ''}`}
-            onMouseEnter={() => setActiveCard('unitTests')}
-            onMouseLeave={() => setActiveCard(null)}
-          >
-            <div className="p-6">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="bg-gradient-to-br from-orange-100 to-orange-200 p-3 rounded-full">
-                  <Award className="h-8 w-8 text-orange-600" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900">Unit Test Marks</h2>
-              </div>
-              <div className="space-y-4">
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500">Test 1</p>
-                  <p className="text-2xl font-bold text-orange-600">{student.assessments?.[0]?.unitTest1Marks || 'N/A'} / 30</p>
-                </div>
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500">Test 2</p>
-                  <p className="text-2xl font-bold text-orange-600">{student.assessments?.[0]?.unitTest2Marks || 'N/A'} / 30</p>
-                </div>
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
-                  <p className="text-sm text-gray-500">Test 3</p>
-                  <p className="text-2xl font-bold text-orange-600">{student.assessments?.[0]?.unitTest3Marks || 'N/A'} / 30</p>
-                </div>
-              </div>
+        {/* Unit Test Marks Card */}
+        <Card className="p-6 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-white to-gray-50">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="p-3 rounded-full bg-orange-100 text-orange-600 transition-transform duration-300 hover:rotate-12">
+              <Award className="h-6 w-6" />
             </div>
-          </Card>
-        </div>
+            <h2 className="text-xl font-semibold text-gray-800">Unit Test Marks</h2>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-orange-50 group hover:bg-orange-100 transition-colors duration-300">
+              <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Unit Test 1</span>
+              <span className="font-semibold text-orange-600 group-hover:text-orange-700 transition-colors duration-300">{student.unitTests?.unitTest1 || 0}/30</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-orange-50 group hover:bg-orange-100 transition-colors duration-300">
+              <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Unit Test 2</span>
+              <span className="font-semibold text-orange-600 group-hover:text-orange-700 transition-colors duration-300">{student.unitTests?.unitTest2 || 0}/30</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-orange-50 group hover:bg-orange-100 transition-colors duration-300">
+              <span className="text-gray-600 group-hover:text-gray-800 transition-colors duration-300">Unit Test 3</span>
+              <span className="font-semibold text-orange-600 group-hover:text-orange-700 transition-colors duration-300">{student.unitTests?.unitTest3 || 0}/30</span>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );

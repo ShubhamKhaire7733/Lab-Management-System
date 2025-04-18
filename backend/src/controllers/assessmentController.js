@@ -50,7 +50,7 @@ export const saveAssessment = async (req, res) => {
       where: { rollNumber: studentRollNo },
       include: [{
         model: Batch,
-        through: 'StudentBatches'
+        as: 'Batches'
       }]
     });
 

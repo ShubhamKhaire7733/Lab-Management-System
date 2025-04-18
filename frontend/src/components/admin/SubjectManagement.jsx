@@ -12,10 +12,7 @@ function SubjectManagement() {
     name: '',
     code: '',
     description: '',
-    credits: '',
-    batchId: '',
-    year: '',
-    division: ''
+    credits: '3'
   });
 
   useEffect(() => {
@@ -79,6 +76,7 @@ function SubjectManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
     
     try {
       const token = getToken();
@@ -94,11 +92,26 @@ function SubjectManagement() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          code: formData.code.trim(),
+          description: formData.description.trim() || null,
+          credits: parseInt(formData.credits) || 3
+        })
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error(`Failed to ${editingSubject ? 'update' : 'create'} subject`);
+        // Check for specific validation errors
+        if (data.message && data.message.toLowerCase().includes('validation error')) {
+          if (data.message.toLowerCase().includes('name must be unique')) {
+            throw new Error('A subject with this name already exists');
+          } else if (data.message.toLowerCase().includes('code must be unique')) {
+            throw new Error('A subject with this code already exists');
+          }
+        }
+        throw new Error(data.message || `Failed to ${editingSubject ? 'update' : 'create'} subject`);
       }
       
       // Reset form and refresh subjects
@@ -106,10 +119,7 @@ function SubjectManagement() {
         name: '',
         code: '',
         description: '',
-        credits: '',
-        batchId: '',
-        year: '',
-        division: ''
+        credits: '3'
       });
       setShowForm(false);
       setEditingSubject(null);
@@ -126,10 +136,7 @@ function SubjectManagement() {
       name: subject.name,
       code: subject.code || '',
       description: subject.description || '',
-      credits: subject.credits || '',
-      batchId: subject.batchId || '',
-      year: subject.year || '',
-      division: subject.division || ''
+      credits: subject.credits?.toString() || '3'
     });
     setShowForm(true);
   };
@@ -150,7 +157,8 @@ function SubjectManagement() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to delete subject');
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to delete subject');
       }
       
       fetchSubjects();
@@ -176,11 +184,9 @@ function SubjectManagement() {
               name: '',
               code: '',
               description: '',
-              credits: '',
-              batchId: '',
-              year: '',
-              division: ''
+              credits: '3'
             });
+            setError(null);
             setShowForm(true);
           }}
           className="bg-[#155E95] text-white px-4 py-2 rounded hover:bg-[#0d4a7a] transition"
@@ -205,7 +211,7 @@ function SubjectManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Subject Name
+                  Subject Name *
                 </label>
                 <input
                   type="text"
@@ -214,12 +220,14 @@ function SubjectManagement() {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#155E95]"
                   required
+                  maxLength={100}
                 />
+                <p className="text-xs text-gray-500 mt-1">Must be unique</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Subject Code
+                  Subject Code *
                 </label>
                 <input
                   type="text"
@@ -228,7 +236,9 @@ function SubjectManagement() {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#155E95]"
                   required
+                  maxLength={20}
                 />
+                <p className="text-xs text-gray-500 mt-1">Must be unique</p>
               </div>
               
               <div>
@@ -246,7 +256,7 @@ function SubjectManagement() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Credits
+                  Credits *
                 </label>
                 <input
                   type="number"
@@ -254,55 +264,9 @@ function SubjectManagement() {
                   value={formData.credits}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#155E95]"
-                  min="0"
-                  step="0.5"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Batch
-                </label>
-                <select
-                  name="batchId"
-                  value={formData.batchId}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#155E95]"
-                >
-                  <option value="">Select a batch</option>
-                  {batches.map(batch => (
-                    <option key={batch.id} value={batch.id}>
-                      {batch.name} ({batch.year || 'N/A'} - {batch.division || 'N/A'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Year
-                </label>
-                <input
-                  type="text"
-                  name="year"
-                  value={formData.year}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#155E95]"
-                  placeholder="e.g., SE, TE, BE"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Division
-                </label>
-                <input
-                  type="text"
-                  name="division"
-                  value={formData.division}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#155E95]"
-                  placeholder="e.g., 9, 10"
+                  min="1"
+                  max="10"
+                  required
                 />
               </div>
             </div>
@@ -313,6 +277,7 @@ function SubjectManagement() {
                 onClick={() => {
                   setShowForm(false);
                   setEditingSubject(null);
+                  setError(null);
                 }}
                 className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
               >
@@ -345,16 +310,10 @@ function SubjectManagement() {
                   Code
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Credits
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Batch
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Year
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Division
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -364,7 +323,7 @@ function SubjectManagement() {
             <tbody className="bg-white divide-y divide-gray-200">
               {subjects.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
                     No subjects found
                   </td>
                 </tr>
@@ -377,17 +336,11 @@ function SubjectManagement() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {subject.code}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {subject.credits || '-'}
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {subject.description || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {subject.batchId ? getBatchName(subject.batchId) : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {subject.year || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {subject.division || '-'}
+                      {subject.credits}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button

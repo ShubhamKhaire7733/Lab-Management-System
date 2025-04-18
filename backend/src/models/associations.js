@@ -56,7 +56,8 @@ const setupAssociations = () => {
   Student.belongsToMany(Batch, {
     through: 'StudentBatches',
     foreignKey: 'studentId',
-    otherKey: 'batchId'
+    otherKey: 'batchId',
+    as: 'Batches'
   });
 
   // Add Student-Attendance association

@@ -281,128 +281,68 @@ export const getStudentPerformance = async (req, res) => {
 // Get student dashboard data
 export const getStudentDashboard = async (req, res) => {
   try {
-    const studentId = req.user.studentId;
-
-    if (!studentId) {
-      return res.status(404).json({
-        success: false,
-        message: 'Student profile not found'
-      });
-    }
+    const userId = req.user.id;
 
     const student = await Student.findOne({
-      where: { id: studentId },
-      include: [
-        {
-          model: User,
-          as: 'user',
-          attributes: ['email']
+      where: { userId },
+      attributes: ['id', 'rollNumber', 'name', 'email', 'department', 'year', 'division', 'attendanceMarks'],
+      include: [{
+        model: Assessment,
+        as: 'assessments',
+        attributes: ['id', 'experimentNo', 'assignmentMarks', 'unitTest1Marks', 'unitTest2Marks', 'unitTest3Marks'],
+        where: {
+          experimentNo: 0 // Get the final assessment which contains unit test marks
         },
-        {
-          model: Batch,
-          attributes: ['name', 'year', 'division']
-        },
-        {
-          model: Assessment,
-          as: 'assessments',
-          attributes: [
-            'id', 
-            'studentRollNo', 
-            'experimentNo',
-            'scheduledPerformanceDate',
-            'actualPerformanceDate',
-            'scheduledSubmissionDate',
-            'actualSubmissionDate',
-            'rppMarks',
-            'spoMarks',
-            'assignmentMarks',
-            'unitTest1Marks',
-            'unitTest2Marks',
-            'unitTest3Marks',
-            'convertedUnitTestMarks',
-            'finalAssignmentMarks',
-            'theoryAttendanceMarks',
-            'finalMarks'
-          ]
-        },
-        {
-          model: Attendance,
-          as: 'attendances',
-          attributes: ['id', 'date', 'status', 'remarks']
-        },
-        {
-          model: Performance,
-          as: 'performances',
-          attributes: ['id', 'category', 'score', 'date']
-        }
-      ]
+        required: false // Make it a LEFT JOIN to handle cases where there's no final assessment
+      }]
     });
 
     if (!student) {
-      return res.status(404).json({
-        success: false,
-        message: 'Student not found'
-      });
+      return res.status(404).json({ error: 'Student not found' });
     }
 
-    const formattedData = {
-      id: student.id,
-      name: student.name,
-      rollNumber: student.rollNumber,
-      email: student.user.email,
-      year: student.year,
-      division: student.division,
-      department: student.department,
-      attendanceMarks: student.attendanceMarks,
-      batch: student.Batch ? {
-        name: student.Batch.name,
-        year: student.Batch.year,
-        division: student.Batch.division
-      } : null,
-      assessments: student.assessments.map(assessment => ({
-        id: assessment.id,
-        rollNumber: assessment.studentRollNo,
-        experimentNo: assessment.experimentNo,
-        scheduledPerformanceDate: assessment.scheduledPerformanceDate,
-        actualPerformanceDate: assessment.actualPerformanceDate,
-        scheduledSubmissionDate: assessment.scheduledSubmissionDate,
-        actualSubmissionDate: assessment.actualSubmissionDate,
-        rppMarks: assessment.rppMarks,
-        spoMarks: assessment.spoMarks,
-        assignmentMarks: assessment.assignmentMarks,
-        unitTest1Marks: assessment.unitTest1Marks,
-        unitTest2Marks: assessment.unitTest2Marks,
-        unitTest3Marks: assessment.unitTest3Marks,
-        convertedUnitTestMarks: assessment.convertedUnitTestMarks,
-        finalAssignmentMarks: assessment.finalAssignmentMarks,
-        theoryAttendanceMarks: assessment.theoryAttendanceMarks,
-        finalMarks: assessment.finalMarks
-      })),
-      attendance: student.attendances.map(attendance => ({
-        id: attendance.id,
-        date: attendance.date,
-        status: attendance.status,
-        remarks: attendance.remarks
-      })),
-      performance: student.performances.map(performance => ({
-        id: performance.id,
-        category: performance.category,
-        score: performance.score,
-        date: performance.date
-      }))
+    // Get all assessments for summary calculation
+    const allAssessments = await Assessment.findAll({
+      where: { studentRollNo: student.rollNumber },
+      attributes: ['id', 'experimentNo', 'assignmentMarks']
+    });
+
+    // Calculate summary statistics
+    const totalAssessments = allAssessments.length;
+    const completedAssessments = allAssessments.filter(a => a.assignmentMarks !== null).length;
+
+    // Get unit test marks from the final assessment
+    const finalAssessment = student.assessments && student.assessments.length > 0 ? student.assessments[0] : null;
+    const unitTest1 = finalAssessment?.unitTest1Marks || 0;
+    const unitTest2 = finalAssessment?.unitTest2Marks || 0;
+    const unitTest3 = finalAssessment?.unitTest3Marks || 0;
+
+    const response = {
+      profile: {
+        id: student.id,
+        rollNumber: student.rollNumber,
+        name: student.name,
+        email: student.email,
+        department: student.department,
+        year: student.year,
+        division: student.division,
+        attendanceMarks: student.attendanceMarks
+      },
+      summary: {
+        totalAssessments,
+        completedAssessments,
+        totalAttendance: student.attendanceMarks || 0
+      },
+      unitTests: {
+        unitTest1,
+        unitTest2,
+        unitTest3
+      }
     };
 
-    return res.status(200).json({
-      success: true,
-      data: formattedData
-    });
-
+    return res.json(response);
   } catch (error) {
     console.error('Error in getStudentDashboard:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error.message
-    });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
